@@ -102,6 +102,10 @@ export default class spriteFromImage extends Component {
     this.setState({
       sprite: cat
     });
+
+    cat.x = 97;
+    cat.y = 97;
+
     this.stage.addChild(cat);
     this.renderer.render(this.stage); // 这个是必须要的，不然显示不出来。
 
@@ -121,6 +125,35 @@ export default class spriteFromImage extends Component {
     this.setUp();
   }
 
+  changePosition(){
+    let cat = this.state.sprite;
+    cat.position.set(123,123);
+
+    cat.width = 50;
+    cat.height = 80;
+
+    this.renderer.render(this.stage);
+  }
+
+  changeScale(){
+    let cat = this.state.sprite;
+    cat.scale.x = 2;
+    cat.scale.y = 2;
+    // cat.scale.set(2,2); 一样的效果。
+
+    this.renderer.render(this.stage);
+  }
+  rotate(){
+    let cat = this.state.sprite;
+
+    cat.anchor.x = 0.5;
+    cat.anchor.y = 0.5; // 很奇怪，这个 rotate 不是中心旋转。
+
+    cat.rotation = 0.5;
+
+    this.renderer.render(this.stage);
+  }
+
   render() {
     return (
         <div ref="gameCanvas">
@@ -132,6 +165,9 @@ export default class spriteFromImage extends Component {
           </p>
           <Button type='dahsed' onClick={this.removeSprite.bind(this)}>remove cat</Button>
           <Button type='dahsed' onClick={this.resumeSprite.bind(this)}>resume cat</Button>
+          <Button type='primary' onClick={this.changePosition.bind(this)}>change position</Button>
+          <Button type='primary' onClick={this.changeScale.bind(this)}>change Scale</Button>
+          <Button type='primary' onClick={this.rotate.bind(this)}>rotate</Button>
           <br/>
         </div>
     );
