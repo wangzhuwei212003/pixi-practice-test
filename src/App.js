@@ -13,6 +13,9 @@ import {
 
 import DotPath from './practice/DotPath';
 
+import helloWorld from './Learning/helloWorld';
+import spriteFromImage from './Learning/spriteFromImage';
+
 
 const SubMenu = Menu.SubMenu;
 const {Header, Footer, Sider, Content} = Layout;
@@ -63,9 +66,9 @@ class App extends Component {
                     <Menu.Item key="8"><Link to='/Tutorials/SimpleBarChart'>SimpleBarChart</Link></Menu.Item>
                     <Menu.Item key="8-1"><Link to='/Tutorials/Tetris'>Tetris</Link></Menu.Item>
                   </SubMenu>
-                  <SubMenu key="sub2" title={<span><Icon type="appstore"/><span>Example</span></span>}>
-                    <Menu.Item key="9">pasdf</Menu.Item>
-                    <Menu.Item key="10">Option 10</Menu.Item>
+                  <SubMenu key="sub2" title={<span><Icon type="appstore"/><span>kittykatattack/learningPixi</span></span>}>
+                    <Menu.Item key="9"><Link to='/Learning/helloWorld'>helloWorld</Link></Menu.Item>
+                    <Menu.Item key="10"><Link to='/Learning/spriteFromImage'>spriteFromImage</Link></Menu.Item>
                     <SubMenu key="sub3" title="Mouseover">
                       <Menu.Item key="11"></Menu.Item>
                       <Menu.Item key="12">Option 12</Menu.Item>
@@ -78,10 +81,9 @@ class App extends Component {
                  {/*<Route path="/example/BarChart" component={BarChart}/>*/}
                  {/*<Route path="/example/Test" component={Test}/>*/}
 
-                 {/*<Route path="/MAPF/BasicAStar" component={BasicAStar}/>*/}
-                 {/*<Route path="/MAPF/Coop4" component={Coop4}/>*/}
-                 {/*<Route path="/MAPF/Coop30" component={Coop30}/>*/}
-                 {/*<Route path="/MAPF/RowByCol" component={RowByCol}/>*/}
+
+                 <Route path="/Learning/helloWorld" component={helloWorld}/>
+                 <Route path="/Learning/spriteFromImage" component={spriteFromImage}/>
 
                  <Route path="/practice/DotPath" component={DotPath}/>
 

@@ -119,7 +119,7 @@ class DotPath extends Component {
       return newValue
     });
 
-    debugger;
+    // debugger;
     // draw line
     this.line = new PIXI.Graphics();
     this.line.lineStyle(4, 0xFFFFFF, 1);
