@@ -10,9 +10,12 @@ import {
   Link
 } from 'react-router-dom';
 
+
+import DotPath from './practice/DotPath';
+
+
 const SubMenu = Menu.SubMenu;
 const {Header, Footer, Sider, Content} = Layout;
-
 
 class App extends Component {
   render() {
@@ -53,15 +56,15 @@ class App extends Component {
                     <Icon type="inbox"/>
                     <span><Link to='/MAPF/RowByCol'>Rows by columns</Link></span>
                   </Menu.Item>
-                  <SubMenu key="sub1" title={<span><Icon type="mail"/><span>D3 example</span></span>}>
-                    <Menu.Item key="5"><Link to='/Tutorials/DynamicTable'>DynamicTable</Link></Menu.Item>
+                  <SubMenu key="sub1" title={<span><Icon type="mail"/><span>practice</span></span>}>
+                    <Menu.Item key="5"><Link to='/practice/DotPath'>DotPath</Link></Menu.Item>
                     <Menu.Item key="6"><Link to='/Tutorials/MakeGrid'>Grid</Link></Menu.Item>
                     <Menu.Item key="7"><Link to='/Tutorials/mowerDemo'>Mower</Link></Menu.Item>
                     <Menu.Item key="8"><Link to='/Tutorials/SimpleBarChart'>SimpleBarChart</Link></Menu.Item>
                     <Menu.Item key="8-1"><Link to='/Tutorials/Tetris'>Tetris</Link></Menu.Item>
                   </SubMenu>
-                  <SubMenu key="sub2" title={<span><Icon type="appstore"/><span>D3 Util</span></span>}>
-                    <Menu.Item key="9">Option 9</Menu.Item>
+                  <SubMenu key="sub2" title={<span><Icon type="appstore"/><span>Example</span></span>}>
+                    <Menu.Item key="9">pasdf</Menu.Item>
                     <Menu.Item key="10">Option 10</Menu.Item>
                     <SubMenu key="sub3" title="Mouseover">
                       <Menu.Item key="11"></Menu.Item>
@@ -71,20 +74,16 @@ class App extends Component {
                 </Menu>
               </Sider>
               <Content>
-                {/*<Route exact path="/" component={Home}/>
-                 <Route path="/example/BarChart" component={BarChart}/>
-                 <Route path="/example/Test" component={Test}/>
+                {/*<Route exact path="/" component={Home}/>*/}
+                 {/*<Route path="/example/BarChart" component={BarChart}/>*/}
+                 {/*<Route path="/example/Test" component={Test}/>*/}
 
-                 <Route path="/MAPF/BasicAStar" component={BasicAStar}/>
-                 <Route path="/MAPF/Coop4" component={Coop4}/>
-                 <Route path="/MAPF/Coop30" component={Coop30}/>
-                 <Route path="/MAPF/RowByCol" component={RowByCol}/>
+                 {/*<Route path="/MAPF/BasicAStar" component={BasicAStar}/>*/}
+                 {/*<Route path="/MAPF/Coop4" component={Coop4}/>*/}
+                 {/*<Route path="/MAPF/Coop30" component={Coop30}/>*/}
+                 {/*<Route path="/MAPF/RowByCol" component={RowByCol}/>*/}
 
-                 <Route path="/Tutorials/DynamicTable" component={DynamicTable}/>
-                 <Route path="/Tutorials/MakeGrid" component={Grid}/>
-                 <Route path="/Tutorials/mowerDemo" component={Mower}/>
-                 <Route path="/Tutorials/SimpleBarChart" component={SimpleBarChart}/>
-                 <Route path="/Tutorials/Tetris" component={Tetris}/>*/}
+                 <Route path="/practice/DotPath" component={DotPath}/>
 
               </Content>
             </Layout>
