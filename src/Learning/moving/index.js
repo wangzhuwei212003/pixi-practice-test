@@ -1,5 +1,5 @@
 /**
- * Created by zhuweiwang on 2018/6/22.
+ * Created by zhuweiwang on 2018/6/23.
  */
 import React, {Component} from 'react';
 import * as PIXI from "pixi.js";
@@ -8,36 +8,17 @@ import {Menu, Icon, Button, Layout} from 'antd';
 import catImage from '../images/cat.png'; // 这一步很关键，没有这句话，在下面直接用文件路径是不行的。
 import doorImage from '../images/door.png'; //
 
-export default class spriteFromImage extends Component {
+export default class moving extends Component {
 
   constructor(props) {
     super(props);
     this.state = {
       sprite: null
-    }
+    };
+    this.gameloop = this.gameloop.bind(this); // 关键，不然就是requestanimate找不到this.gameloop
   }
 
   componentDidMount() {
-    // this.renderer = PIXI.autoDetectRenderer(566, 768);
-    //
-    // this.stage = new PIXI.Container();
-    // this.stage.width = 500;
-    // this.stage.height = 500;
-    // console.log(this.stage);
-    //
-    // this.isWebGL = this.renderer instanceof PIXI.WebGLRenderer;
-    //
-    // if (!this.isWebGL) {
-    //   this.renderer.context.mozImageSmoothingEnabled = false;
-    //   this.renderer.context.webkitImageSmoothingEnabled = false
-    // }
-    // /*
-    //  * Fix for iOS GPU issues
-    //  */
-    // this.renderer.view.style['transform'] = 'translatez(0)';
-    //
-
-
     this.createRenderer();
     this.loadImage();
   }
@@ -77,11 +58,6 @@ export default class spriteFromImage extends Component {
         .on("progress", this.loadProgressHandler)
         .load(this.setUp.bind(this));
   }
-/*.add([
-       {name: 'key4', url: 'http://...', onComplete: function () {} },
-       {url: 'http://...', onComplete: function () {} },
-       'http://...'
-     ]);*/ // 很多用处的 loader
 
   loadProgressHandler(loader, resource) {
     //Display the file `url` currently being loaded
@@ -105,6 +81,8 @@ export default class spriteFromImage extends Component {
 
     cat.x = 97;
     cat.y = 97;
+    cat.vx = 0;
+    cat.vy = 0;
 
     this.stage.addChild(cat);
     this.renderer.render(this.stage); // 这个是必须要的，不然显示不出来。
@@ -154,19 +132,55 @@ export default class spriteFromImage extends Component {
     this.renderer.render(this.stage);
   }
 
+/*  moveSetUp(){
+    let self = this;
+    //Start the game loop by adding the `gameLoop` function to
+    //Pixi's `ticker` and providing it with a `delta` argument. ticker renderer里没有？还是用 requestAnimationFrame
+    this.renderer.ticker.add(delta => self.gameLoop.bind(self, delta));
+  }*/
+  gameloop(){
+    console.log('gameloop occurred');
+    //Call this `gameLoop` function on the next screen refresh
+    //(which happens 60 times per second)
+    requestAnimationFrame(this.gameloop);
+
+    //Move the cat 1 pixel
+    this.state.sprite.x += 1;
+
+    this.renderer.render(this.stage); // 这句也是关键，这个是改变了之后要重新 render
+  }
+
+  velocity = () => {
+    let cat = this.state.sprite;
+
+    //Update the cat's velocity
+    cat.vx = 5;
+    cat.vy = 5;
+
+    //Apply the velocity values to the cat's
+    //position to make it move
+    cat.x += cat.vx;
+    cat.y += cat.vy;
+
+    this.renderer.render(this.stage);
+  };
+
   render() {
     return (
         <div ref="gameCanvas">
           <p>
             1. load image，<br/>
-            2. position and rotate <br/>
-            <br/><br/>
+            2. movement, velocity <br/>
+            3. keyboard movement TO be continued... <br/>
+            <br/>
           </p>
           <Button type='dahsed' onClick={this.removeSprite.bind(this)}>remove cat</Button>
           <Button type='dahsed' onClick={this.resumeSprite.bind(this)}>resume cat</Button>
-          <Button type='primary' onClick={this.changePosition.bind(this)}>change position</Button>
-          <Button type='primary' onClick={this.changeScale.bind(this)}>change Scale</Button>
-          <Button type='primary' onClick={this.rotate.bind(this)}>rotate</Button>
+          {/*<Button type='primary' onClick={this.changePosition.bind(this)}>change position</Button>*/}
+          {/*<Button type='primary' onClick={this.changeScale.bind(this)}>change Scale</Button>*/}
+          {/*<Button type='primary' onClick={this.rotate.bind(this)}>rotate</Button>*/}
+          <Button type='primary' onClick={this.gameloop.bind(this)}>moveSetUp</Button>
+          <Button type='primary' onClick={this.velocity}>velocity</Button>
           <br/>
         </div>
     );

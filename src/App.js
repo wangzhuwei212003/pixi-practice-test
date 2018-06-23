@@ -12,9 +12,14 @@ import {
 
 
 import DotPath from './practice/DotPath';
+import VirtualCar from './practice/VirtualCar';
 
 import helloWorld from './Learning/helloWorld';
 import spriteFromImage from './Learning/spriteFromImage';
+import spriteFromTileset from './Learning/spriteFromTileset';
+import moving from './Learning/moving';
+import groupSprite from './Learning/groupSprite';
+import primitiveText from './Learning/primitiveText';
 
 
 const SubMenu = Menu.SubMenu;
@@ -34,7 +39,7 @@ class App extends Component {
               <Sider>
                 <Menu
                     defaultSelectedKeys={['1']}
-                    defaultOpenKeys={['sub1']}
+                    defaultOpenKeys={['sub1-practice']}
                     mode="inline"
                     theme="light"
                     inlineCollapsed={false}
@@ -59,17 +64,20 @@ class App extends Component {
                     <Icon type="inbox"/>
                     <span><Link to='/MAPF/RowByCol'>Rows by columns</Link></span>
                   </Menu.Item>
-                  <SubMenu key="sub1" title={<span><Icon type="mail"/><span>practice</span></span>}>
+                  <SubMenu key="sub1-practice" title={<span><Icon type="mail"/><span>practice</span></span>}>
                     <Menu.Item key="5"><Link to='/practice/DotPath'>DotPath</Link></Menu.Item>
-                    <Menu.Item key="6"><Link to='/Tutorials/MakeGrid'>Grid</Link></Menu.Item>
-                    <Menu.Item key="7"><Link to='/Tutorials/mowerDemo'>Mower</Link></Menu.Item>
-                    <Menu.Item key="8"><Link to='/Tutorials/SimpleBarChart'>SimpleBarChart</Link></Menu.Item>
-                    <Menu.Item key="8-1"><Link to='/Tutorials/Tetris'>Tetris</Link></Menu.Item>
+                    <Menu.Item key="5-VirtualCar"><Link to='/practice/VirtualCar'>VirtualCar</Link></Menu.Item>
+
                   </SubMenu>
                   <SubMenu key="sub2" title={<span><Icon type="appstore"/><span>kittykatattack/learningPixi</span></span>}>
                     <Menu.Item key="9"><Link to='/Learning/helloWorld'>helloWorld</Link></Menu.Item>
                     <Menu.Item key="10"><Link to='/Learning/spriteFromImage'>spriteFromImage</Link></Menu.Item>
-                    <SubMenu key="sub3" title="Mouseover">
+                    <Menu.Item key="10-1"><Link to='/Learning/spriteFromTileset'>spriteFromTileset</Link></Menu.Item>
+                    <Menu.Item key="10-2"><Link to='/Learning/moving'>moving</Link></Menu.Item>
+                    <Menu.Item key="10-groupSprite"><Link to='/Learning/groupSprite'>groupSprite</Link></Menu.Item>
+                    <Menu.Item key="10-primitiveText"><Link to='/Learning/primitiveText'>primitiveText</Link></Menu.Item>
+
+                    <SubMenu key="sub3" title="ToBeContinued...">
                       <Menu.Item key="11"></Menu.Item>
                       <Menu.Item key="12">Option 12</Menu.Item>
                     </SubMenu>
@@ -84,8 +92,13 @@ class App extends Component {
 
                  <Route path="/Learning/helloWorld" component={helloWorld}/>
                  <Route path="/Learning/spriteFromImage" component={spriteFromImage}/>
+                 <Route path="/Learning/spriteFromTileset" component={spriteFromTileset}/>
+                 <Route path="/Learning/moving" component={moving}/>
+                 <Route path="/Learning/groupSprite" component={groupSprite}/>
+                 <Route path="/Learning/primitiveText" component={primitiveText}/>
 
                  <Route path="/practice/DotPath" component={DotPath}/>
+                 <Route path="/practice/VirtualCar" component={VirtualCar}/>
 
               </Content>
             </Layout>
