@@ -12,6 +12,7 @@ import {
 
 
 import DotPath from './practice/DotPath';
+import DispatchDemo from './practice/DispatchDemo';
 import VirtualCar from './practice/VirtualCar';
 
 import helloWorld from './Learning/helloWorld';
@@ -66,6 +67,7 @@ class App extends Component {
                   </Menu.Item>
                   <SubMenu key="sub1-practice" title={<span><Icon type="mail"/><span>practice</span></span>}>
                     <Menu.Item key="5"><Link to='/practice/DotPath'>DotPath</Link></Menu.Item>
+                    <Menu.Item key="5-DispatchDemo"><Link to='/practice/DispatchDemo'>DispatchDemo</Link></Menu.Item>
                     <Menu.Item key="5-VirtualCar"><Link to='/practice/VirtualCar'>VirtualCar</Link></Menu.Item>
 
                   </SubMenu>
@@ -98,6 +100,7 @@ class App extends Component {
                  <Route path="/Learning/primitiveText" component={primitiveText}/>
 
                  <Route path="/practice/DotPath" component={DotPath}/>
+                 <Route path="/practice/DispatchDemo" component={DispatchDemo}/>
                  <Route path="/practice/VirtualCar" component={VirtualCar}/>
 
               </Content>

@@ -8,6 +8,7 @@ import React, {Component} from 'react';
 import * as PIXI from "pixi.js";
 import {Menu, Icon, Button, Collapse} from 'antd';
 import config from './config';
+import car from './core/car'
 
 import tileImage from '../../Learning/images/tileset.png'; // 这一步很关键，没有这句话，在下面直接用文件路径是不行的。
 
@@ -74,10 +75,13 @@ export default class VirtualCar extends Component {
     rocket.scale.set(0.5);
     this.stage.addChild(rocket);
     this.renderer.render(this.stage);
-
-    console.log(config.pathInfo);
   }
 
+  testCar(){
+    console.log('test car pressed');
+    const testCar = new car();
+    testCar.getUpdateOdom();
+  }
 
   render() {
     return (
@@ -99,11 +103,7 @@ export default class VirtualCar extends Component {
               <p>{text}</p>
             </Panel>
           </Collapse>
-          {/*<Button type='dahsed' onClick={this.removeSprite.bind(this)}>remove cat</Button>*/}
-          {/*<Button type='dahsed' onClick={this.resumeSprite.bind(this)}>resume cat</Button>*/}
-          {/*<Button type='primary' onClick={this.changePosition.bind(this)}>change position</Button>*/}
-          {/*<Button type='primary' onClick={this.changeScale.bind(this)}>change Scale</Button>*/}
-          {/*<Button type='primary' onClick={this.rotate.bind(this)}>rotate</Button>*/}
+          <Button type='primary' onClick={this.testCar}>test car</Button>
           <br/>
         </div>
     );

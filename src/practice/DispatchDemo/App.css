@@ -1,0 +1,85 @@
+@import '~antd/dist/antd.css';
+
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  animation: App-logo-spin infinite 20s linear;
+  height: 80px;
+}
+
+.App-header {
+  background-color: #222;
+  height: 150px;
+  padding: 20px;
+  color: white;
+}
+
+.App-title {
+  font-size: 1.5em;
+}
+
+.App-intro {
+  font-size: large;
+}
+
+@keyframes App-logo-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.pixi-container {
+}
+
+.interface{
+  display: flex;
+  position: fixed;
+  bottom: 0;
+  right:0;
+  flex-direction: column;
+  height: 560px;
+  width: 300px;
+  border-radius: 5px;
+  border: 1px solid rebeccapurple;
+  background-color: white;
+  /*background-color: rebeccapurple;*/
+  align-items: center;
+  justify-content: flex-start;
+}
+.fixed-window{
+  display: flex;
+  height: 60px;
+  width: 300px;
+  border-radius: 5px;
+  background-color: rebeccapurple;
+  align-items: center;
+  justify-content: space-around;
+}
+.carNum {
+  display: inline-block;
+  color: yellowgreen;
+  font-size: larger;
+}
+.rowNum {
+  display: inline-block;
+  color: rebeccapurple;
+  font-size: larger;
+  margin-right: 20px;
+}
+
+
+#backimage{
+  position: absolute;
+  top:0;
+  left:0;
+  height:200px;
+  width: 100px;
+  background-color: red;
+}
+
+.group-box{
+  display: block;
+  clear: both;
+  margin-top: 40px;
+}
