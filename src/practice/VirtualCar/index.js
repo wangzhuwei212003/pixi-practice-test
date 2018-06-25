@@ -25,7 +25,8 @@ export default class VirtualCar extends Component {
     super(props);
     this.state = {
       sprite: null
-    }
+    };
+    this.gameLoop = this.gameLoop.bind(this); // 关键，不然就是requestanimate找不到this.gameloop
   }
 
   componentDidMount() {
@@ -73,6 +74,11 @@ export default class VirtualCar extends Component {
     rocket.x = 32;
     rocket.y = 32;
     rocket.scale.set(0.5);
+
+    this.setState({
+      sprite:rocket
+    });
+
     this.stage.addChild(rocket);
     this.renderer.render(this.stage);
   }
@@ -80,7 +86,17 @@ export default class VirtualCar extends Component {
   testCar(){
     console.log('test car pressed');
     const testCar = new car();
-    testCar.getUpdateOdom();
+    testCar.updateOdom(100);
+
+    this.state.sprite.y = testCar.odom.total_teeth_from_origin;
+  }
+
+  gameLoop(){
+    this.testCar();
+    console.log('gameloop occurred');
+    requestAnimationFrame(this.gameLoop);
+
+    this.renderer.render(this.stage); // 这句也是关键，这个是改变了之后要重新 render
   }
 
   render() {
@@ -104,6 +120,7 @@ export default class VirtualCar extends Component {
             </Panel>
           </Collapse>
           <Button type='primary' onClick={this.testCar}>test car</Button>
+          <Button type='primary' onClick={this.gameLoop.bind(this)}>game loop</Button>
           <br/>
         </div>
     );
