@@ -86,7 +86,7 @@ export default class VirtualCar extends Component {
   testCar(){
     console.log('test car pressed');
     const testCar = new car();
-    testCar.updateOdom(100);
+    testCar.updateOdomTest(100);
 
     this.state.sprite.y = testCar.odom.total_teeth_from_origin;
   }
