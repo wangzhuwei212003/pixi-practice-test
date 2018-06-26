@@ -30,12 +30,14 @@ function car() {
 car.prototype._initialOdom = function () {
   // 初始化car里的odom
   console.log('initial Odom');
-  return config.Odometry; // 返回config里的初始的原点处的 odom
+  return JSON.parse(JSON.stringify(config.Odometry)); // 返回config里的初始的原点处的 odom
+  // return config.Odometry; // 返回config里的初始的原点处的 odom
 };
 car.prototype._initialPathInfo = function () {
   // 初始化car里的odom
   console.log('initial PathInfo');
-  return config.pathInfo; // 返回config里的初始的原点处的 odom
+  return JSON.parse(JSON.stringify(config.pathInfo)); // 返回config里的初始的原点处的 odom
+  // return config.pathInfo; // 返回config里的初始的原点处的 odom
 };
 
 car.prototype.updateOdomTest = function (updateTimeGap) {

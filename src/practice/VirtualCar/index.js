@@ -76,27 +76,32 @@ export default class VirtualCar extends Component {
     rocket.scale.set(0.5);
 
     this.setState({
-      sprite:rocket
+      sprite: rocket
     });
 
     this.stage.addChild(rocket);
     this.renderer.render(this.stage);
   }
 
-  testCar(){
+  testCar() {
     console.log('test car pressed');
     const testCar = new car();
     testCar.updateOdomTest(100);
 
+    console.log(testCar.odom);
     this.state.sprite.y = testCar.odom.total_teeth_from_origin;
   }
 
-  gameLoop(){
-    this.testCar();
-    console.log('gameloop occurred');
-    requestAnimationFrame(this.gameLoop);
+  gameLoop() {
 
-    this.renderer.render(this.stage); // 这句也是关键，这个是改变了之后要重新 render
+    setTimeout(() => {
+      this.testCar();
+      console.log('gameloop occurred');
+      requestAnimationFrame(this.gameLoop);
+
+      this.renderer.render(this.stage); // 这句也是关键，这个是改变了之后要重新 render
+    }, 1000);
+
   }
 
   render() {
