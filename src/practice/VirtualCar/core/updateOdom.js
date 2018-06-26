@@ -13,7 +13,7 @@ import config from '../config'
 
 
 export const updateOdom = function (updateTimeGap, curSpeed, odom, pathInfo) {
-  const totalTeethAdd = updateTimeGap * curSpeed;
+  const totalTeethAdd = updateTimeGap/1000 * curSpeed;
   const newOdom = JSON.parse(JSON.stringify(odom));
   const Actions = pathInfo.Actions; // 一个数组
 
@@ -190,21 +190,27 @@ export const updateOdom = function (updateTimeGap, curSpeed, odom, pathInfo) {
     case config.SpecificActions['SA_ODOM_FORWARD_GROUND_AS_REFERENCE'].toString():
       if (newOdom.horizontal_offset_from_nearest_coordinate > nextCellTeeth) {
         newOdom.current_column += 1;
+        newOdom.horizontal_offset_from_nearest_coordinate -= nextCellTeeth;
       }
       break;
     case config.SpecificActions['SA_ODOM_BACKWARD_GROUND_AS_REFERENCE'].toString():
       if (newOdom.horizontal_offset_from_nearest_coordinate > nextCellTeeth) {
         newOdom.current_column -= 1;
+        newOdom.horizontal_offset_from_nearest_coordinate -= nextCellTeeth;
       }
       break;
     case config.SpecificActions['SA_ODOM_UP_GROUND_AS_REFERENCE'].toString():
+      console.log('yundongfangsxiangxiangshagn ');
+      console.log(nextCellTeeth);
       if (newOdom.vertical_offset_from_nearest_coordinate > nextCellTeeth) {
         newOdom.current_row += 1;
+        newOdom.vertical_offset_from_nearest_coordinate -= nextCellTeeth
       }
       break;
     case config.SpecificActions['SA_ODOM_DOWN_GROUND_AS_REFERENCE'].toString():
       if (newOdom.vertical_offset_from_nearest_coordinate > nextCellTeeth) {
         newOdom.current_row -= 1;
+        newOdom.vertical_offset_from_nearest_coordinate -= nextCellTeeth
       }
       break;
   }
@@ -247,6 +253,12 @@ const findCellTeeth = function (current_row, current_column, theoretical_moving_
       return config.SDownPartBig;
     } else if (current_row === config.SUPPartBigRow) {
       return config.SUPPartBig;
+    } else if (current_row === 0){
+      return config.specialHeight; // 如果是 0，0 向上的运动方向，那么就是一个特殊长度。
+    } else if(current_row === topRowIndex - 1){
+      return config.topBoxNormalHeightBig
+    } else {
+      return config.normalHeightBig;
     }
   } else if (
       theoretical_moving_direction.toString() === config.SpecificActions['SA_ODOM_DOWN_GROUND_AS_REFERENCE'].toString() &&
@@ -258,6 +270,13 @@ const findCellTeeth = function (current_row, current_column, theoretical_moving_
       return config.SDownPartBig;
     } else if (current_row === config.SUPPartBigRow + 1) {
       return config.SUPPartBig;
+    }else if(current_row === 1){
+      return config.specialHeight; //一个特殊长度。
+    }else if(current_row === 0){
+      // 倒数第一行 特殊宽度部分
+      return config.doubleBottomPartBig;
+    }else{
+      return config.normalHeightBig;
     }
   } else if (
       current_row < topRowIndex && current_row > 1
@@ -282,12 +301,6 @@ const findCellTeeth = function (current_row, current_column, theoretical_moving_
   ) {
     // 倒数第一行 特殊宽度部分
     return config.specialBottomPartBig;
-  } else if (
-      current_row === 0 &&
-      current_column === lastColIndex
-  ) {
-    // 倒数第一行 特殊宽度部分
-    return config.doubleBottomPartBig;
   } else if (current_row === 0) {
     return config.normalWidthBig;
   } else {
@@ -295,3 +308,27 @@ const findCellTeeth = function (current_row, current_column, theoretical_moving_
   }
 };
 
+export const switchOdomDownToUp = function (odom) {
+  // 这里需要转换小车的odom，由于特殊情况
+  // 根据发过来的路径（负号）判断出，小车odom需要转换了。本来是向下，转换成向上。
+
+  const newOdom = JSON.parse(JSON.stringify(odom));
+  // 向上运动的所在位置的格子都是正常齿数的格子。目前不可能是在（1，3）下面开始向上运动。
+  newOdom.vertical_offset_from_nearest_coordinate = config.normalHeightBig - odom.vertical_offset_from_nearest_coordinate;
+  newOdom.current_row -= 1;
+  newOdom.theoretical_moving_direction = config.SpecificActions['SA_ODOM_UP_GROUND_AS_REFERENCE'].toString();
+
+  return newOdom;
+};
+export const switchOdomUpToDown = function (odom) {
+  // 这里需要转换小车的odom，由于特殊情况向上取货完成之后，要向下运动。
+  // 本来是向上，转换成向下。
+
+  const newOdom = JSON.parse(JSON.stringify(odom));
+  // 向上运动的所在位置的格子都是正常齿数的格子。目前不可能是在（1，3）下面开始向上运动。
+  newOdom.vertical_offset_from_nearest_coordinate = config.normalHeightBig - odom.vertical_offset_from_nearest_coordinate;
+  newOdom.current_row += 1;
+  newOdom.theoretical_moving_direction = config.SpecificActions['SA_ODOM_DOWN_GROUND_AS_REFERENCE'].toString();
+
+  return newOdom;
+};

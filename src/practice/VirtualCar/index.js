@@ -24,9 +24,11 @@ export default class VirtualCar extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      sprite: null
+      sprite: null,
+      car: null,
     };
     this.gameLoop = this.gameLoop.bind(this); // 关键，不然就是requestanimate找不到this.gameloop
+    // this.testCar = this.testCar.bind(this); // 关键，不然就是requestanimate找不到this.gameloop
   }
 
   componentDidMount() {
@@ -76,32 +78,60 @@ export default class VirtualCar extends Component {
     rocket.scale.set(0.5);
 
     this.setState({
-      sprite: rocket
+      sprite: rocket,
+      car: new car(),
     });
+
+    this.addMap();
 
     this.stage.addChild(rocket);
     this.renderer.render(this.stage);
   }
 
+  addMap(){
+    let maps = new PIXI.Container();
+
+    for(let rowIndex = 0; rowIndex < config.bigRowNum; rowIndex += 1){
+      for(let colIndex = 0; colIndex < config.bigColNum; colIndex += 1){
+        let circle = new PIXI.Graphics();
+        circle.beginFill(0x554455);
+        // circle.beginFill(0x9966FF);
+        circle.drawCircle(0, 0, 32);
+        circle.endFill();
+        circle.x = colIndex * 100;
+        circle.y = rowIndex * 100;
+        maps.addChild(circle);
+      }
+    }
+    maps.position.set(0,120);
+    this.stage.addChild(maps);
+  }
+
   testCar() {
     console.log('test car pressed');
-    const testCar = new car();
-    testCar.updateOdomTest(100);
-
-    console.log(testCar.odom);
-    this.state.sprite.y = testCar.odom.total_teeth_from_origin;
+    this.state.car.updateOdomByTime(1000);
+    // this.state.car.updateOdomTest(100);
+    console.log(this.state.car.odom);
+    this.state.sprite.y = config.bigRowNum * 100 - this.state.car.odom.current_row * 100;
+    this.state.sprite.x = this.state.car.odom.current_column * 100;
   }
 
   gameLoop() {
-
-    setTimeout(() => {
+    this.loop = setTimeout(() => {
       this.testCar();
       console.log('gameloop occurred');
       requestAnimationFrame(this.gameLoop);
 
       this.renderer.render(this.stage); // 这句也是关键，这个是改变了之后要重新 render
     }, 1000);
+  }
 
+  sendTestPathInfo() {
+    this.state.car.handlePathInfoReceived(config.pathInfo_test1);
+  }
+
+  stopLoop(){
+    clearTimeout(this.loop);
   }
 
   render() {
@@ -125,7 +155,9 @@ export default class VirtualCar extends Component {
             </Panel>
           </Collapse>
           <Button type='primary' onClick={this.testCar}>test car</Button>
-          <Button type='primary' onClick={this.gameLoop.bind(this)}>game loop</Button>
+          <Button type='dashed' onClick={this.gameLoop.bind(this)}>game loop</Button>
+          <Button type='danger' onClick={this.sendTestPathInfo.bind(this)}>send test pathInfo </Button>
+          <Button type='dashed' onClick={this.stopLoop.bind(this)}>stop loop </Button>
           <br/>
         </div>
     );

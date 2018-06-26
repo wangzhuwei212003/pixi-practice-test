@@ -5,7 +5,9 @@
 // import Node from './Node';
 import config from '../config';
 import {
-  updateOdom
+  updateOdom,
+  switchOdomDownToUp,
+  switchOdomUpToDown
 } from './updateOdom';
 
 function car() {
@@ -19,7 +21,7 @@ function car() {
     wheel_to_chain: 21
   };
 
-  this.currentSpeed = 10; // 当前的速度，单位：齿每秒
+  this.currentSpeed = 40; // 当前的速度，单位：齿每秒
 
   this.odom = this._initialOdom(); // 每个小车当前的 odom
 
@@ -36,7 +38,7 @@ car.prototype._initialOdom = function () {
 car.prototype._initialPathInfo = function () {
   // 初始化car里的odom
   console.log('initial PathInfo');
-  return JSON.parse(JSON.stringify(config.pathInfo)); // 返回config里的初始的原点处的 odom
+  return JSON.parse(JSON.stringify(config.pathInfoInit)); // 返回config里的初始的原点处的 odom
   // return config.pathInfo; // 返回config里的初始的原点处的 odom
 };
 
@@ -47,7 +49,7 @@ car.prototype.updateOdomTest = function (updateTimeGap) {
 };
 
 // 对外的接口
-car.prototype.updateOdom = function (updateTimeGap) {
+car.prototype.updateOdomByTime = function (updateTimeGap) {
   // 根据更新的时间间隔 单位毫秒，来按照速度更新 odom
 
   if(this.odom.total_teeth_from_origin >= this.pathInfo.total_teeth){
@@ -78,7 +80,7 @@ car.prototype.handlePathInfoReceived = function (newPathInfo) {
   // 如果上一个路径还没有走完，就不能开始下一个路径。报错。
   // 注意，total_teeth_from_origin 并不是从原点开始走了多少个齿，而是，从一段路径的起点开始。
   // 一段路径走完之后，要有 total_teeth_from_origin 归零。
-  if(this.odom.total_teeth_from_origin < this.pathInfo.total_teeth){
+  if(this.odom.total_teeth_from_origin < Math.abs(this.pathInfo.total_teeth)){
     // 如果是小车还没走到之前的路径，就不接收新的路径。
     console.log('小车还没走到之前的路径，就不接收新的路径');
     return
@@ -89,6 +91,13 @@ car.prototype.handlePathInfoReceived = function (newPathInfo) {
     *
     * 以及另一种特殊情况就是小车向上取货完毕之后，开始向下运动。这个odom也是要改的。
     * */
+    if(newPathInfo.total_teeth < 0 && this.pathInfo.total_teeth > 0){
+      // 负数意味着向上取货
+      // 立即更改odom方向为向上
+      this.odom = switchOdomDownToUp(this.odom);
+    }else if(newPathInfo.total_teeth > 0 && this.pathInfo.total_teeth < 0){
+      this.odom = switchOdomUpToDown(this.odom);
+    }
 
     console.log('Update pathinfo');
     this.pathInfo = newPathInfo;
