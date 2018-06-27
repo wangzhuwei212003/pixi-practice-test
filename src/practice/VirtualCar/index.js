@@ -108,22 +108,40 @@ export default class VirtualCar extends Component {
   }
 
   testCar() {
-    console.log('test car pressed');
-    this.state.car.updateOdomByTime(1000);
+    // console.log('test car pressed');
+    this.state.car.updateOdomByTime(50); // 这里的参数是每次循环，小车走过的实际时间。
     // this.state.car.updateOdomTest(100);
-    console.log(this.state.car.odom);
+    // console.log(this.state.car.odom);
     this.state.sprite.y = config.bigRowNum * 100 - this.state.car.odom.current_row * 100;
     this.state.sprite.x = this.state.car.odom.current_column * 100;
+    switch (this.state.car.odom.theoretical_moving_direction.toString()) {
+      case config.SpecificActions['SA_ODOM_FORWARD_GROUND_AS_REFERENCE'].toString():
+        this.state.sprite.x += this.state.car.odom.offsetPercent * 100;
+        break;
+      case config.SpecificActions['SA_ODOM_BACKWARD_GROUND_AS_REFERENCE'].toString():
+        this.state.sprite.x -= this.state.car.odom.offsetPercent * 100;
+        break;
+      case config.SpecificActions['SA_ODOM_UP_GROUND_AS_REFERENCE'].toString():
+        this.state.sprite.y -= this.state.car.odom.offsetPercent * 100;
+        break;
+      case config.SpecificActions['SA_ODOM_DOWN_GROUND_AS_REFERENCE'].toString():
+        this.state.sprite.y += this.state.car.odom.offsetPercent * 100;
+        break;
+    }
   }
 
   gameLoop() {
     this.loop = setTimeout(() => {
-      this.testCar();
-      console.log('gameloop occurred');
-      requestAnimationFrame(this.gameLoop);
+      const startT = Date.now();
 
+      this.testCar();
+      // console.log('gameloop occurred');
+      requestAnimationFrame(this.gameLoop);
       this.renderer.render(this.stage); // 这句也是关键，这个是改变了之后要重新 render
-    }, 1000);
+
+      const endT = Date.now();
+      console.log('循环一步时间：', endT - startT);
+    }, 1); // 这里是循环的频率。每次循环的间隔。
   }
 
   sendTestPathInfo() {

@@ -152,19 +152,19 @@ export const updateOdom = function (updateTimeGap, curSpeed, odom, pathInfo) {
     // 如果是没有改变 offset，就是根据当前的运动方向，改变 offset
     switch (odom.theoretical_moving_direction.toString()) {
       case config.SpecificActions['SA_ODOM_FORWARD_GROUND_AS_REFERENCE'].toString():
-        console.log('action SA_ODOM_FORWARD_GROUND_AS_REFERENCE', '运动方向为向前');
+        // console.log('action SA_ODOM_FORWARD_GROUND_AS_REFERENCE', '运动方向为向前');
         newOdom.horizontal_offset_from_nearest_coordinate += totalTeethAdd;
         break;
       case config.SpecificActions['SA_ODOM_BACKWARD_GROUND_AS_REFERENCE'].toString():
-        console.log('action SA_ODOM_BACKWARD_GROUND_AS_REFERENCE', '运动方向为向后');
+        // console.log('action SA_ODOM_BACKWARD_GROUND_AS_REFERENCE', '运动方向为向后');
         newOdom.horizontal_offset_from_nearest_coordinate += totalTeethAdd;
         break;
       case config.SpecificActions['SA_ODOM_UP_GROUND_AS_REFERENCE'].toString():
-        console.log('action SA_ODOM_UP_GROUND_AS_REFERENCE', '运动方向为向上');
+        // console.log('action SA_ODOM_UP_GROUND_AS_REFERENCE', '运动方向为向上');
         newOdom.vertical_offset_from_nearest_coordinate += totalTeethAdd;
         break;
       case config.SpecificActions['SA_ODOM_DOWN_GROUND_AS_REFERENCE'].toString():
-        console.log('action SA_ODOM_DOWN_GROUND_AS_REFERENCE', '运动方向为向下');
+        // console.log('action SA_ODOM_DOWN_GROUND_AS_REFERENCE', '运动方向为向下');
         newOdom.vertical_offset_from_nearest_coordinate += totalTeethAdd;
         break;
     }
@@ -191,26 +191,34 @@ export const updateOdom = function (updateTimeGap, curSpeed, odom, pathInfo) {
       if (newOdom.horizontal_offset_from_nearest_coordinate > nextCellTeeth) {
         newOdom.current_column += 1;
         newOdom.horizontal_offset_from_nearest_coordinate -= nextCellTeeth;
+      }else{
+        newOdom.offsetPercent = newOdom.horizontal_offset_from_nearest_coordinate / nextCellTeeth
       }
       break;
     case config.SpecificActions['SA_ODOM_BACKWARD_GROUND_AS_REFERENCE'].toString():
       if (newOdom.horizontal_offset_from_nearest_coordinate > nextCellTeeth) {
         newOdom.current_column -= 1;
         newOdom.horizontal_offset_from_nearest_coordinate -= nextCellTeeth;
+      }else{
+        newOdom.offsetPercent = newOdom.horizontal_offset_from_nearest_coordinate / nextCellTeeth
       }
       break;
     case config.SpecificActions['SA_ODOM_UP_GROUND_AS_REFERENCE'].toString():
-      console.log('yundongfangsxiangxiangshagn ');
-      console.log(nextCellTeeth);
+      // console.log('yundongfangsxiangxiangshagn ');
+      // console.log(nextCellTeeth);
       if (newOdom.vertical_offset_from_nearest_coordinate > nextCellTeeth) {
         newOdom.current_row += 1;
         newOdom.vertical_offset_from_nearest_coordinate -= nextCellTeeth
+      }else{
+        newOdom.offsetPercent = newOdom.vertical_offset_from_nearest_coordinate / nextCellTeeth
       }
       break;
     case config.SpecificActions['SA_ODOM_DOWN_GROUND_AS_REFERENCE'].toString():
       if (newOdom.vertical_offset_from_nearest_coordinate > nextCellTeeth) {
         newOdom.current_row -= 1;
         newOdom.vertical_offset_from_nearest_coordinate -= nextCellTeeth
+      }else{
+        newOdom.offsetPercent = newOdom.vertical_offset_from_nearest_coordinate / nextCellTeeth
       }
       break;
   }
