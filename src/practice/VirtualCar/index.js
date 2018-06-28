@@ -115,9 +115,9 @@ export default class VirtualCar extends Component {
 
   testCar() {
     // console.log('test car pressed');
-    this.state.car.updateOdomByTime(50); // 这里的参数是每次循环，小车走过的实际时间。
+    // this.state.car.updateOdomByTime(50); // 这里的参数是每次循环，小车走过的实际时间。这里应该是给后端更新数据
     // this.state.car.updateOdomTest(100);
-    // console.log(this.state.car.odom);
+    // console.log(this.state.car);
     this.state.sprite.y = config.bigRowNum * config.pixelGap - this.state.car.odom.current_row * config.pixelGap;
     this.state.sprite.x = this.state.car.odom.current_column * config.pixelGap;
     switch (this.state.car.odom.theoretical_moving_direction.toString()) {
@@ -147,7 +147,7 @@ export default class VirtualCar extends Component {
 
       const endT = Date.now();
       // console.log('循环一步时间：', endT - startT);
-    }, 10); // 这里是循环的频率。每次循环的间隔。如果这里的时间设的太短，stop loop 的按钮需要按很多下。不是很灵。
+    }, 20); // 这里是循环的频率。每次循环的间隔。如果这里的时间设的太短，stop loop 的按钮需要按很多下。不是很灵。
   }
 
   sendTestPathInfo() {
@@ -178,6 +178,7 @@ export default class VirtualCar extends Component {
 
     // 以上是后端数据
     this.state.car = shuttles[uid];
+    this.gameLoop();
   }
 
   findNextGoal(){
@@ -212,9 +213,11 @@ export default class VirtualCar extends Component {
           <Button type='danger' onClick={this.sendTestPathInfo.bind(this)}>send test pathInfo </Button>
           <Button type='dashed' onClick={this.stopLoop.bind(this)}>stop loop </Button>
           <br/>
+          <br/>
           <Button type='primary' onClick={this.initialDispatch.bind(this)}>initial dispatch </Button>
           <br/>
           <br/>
+          <p>首先 initial dispatch，再添加一辆车。</p>
           <Button type='primary' onClick={this.registerOneMore.bind(this)}>流程1：注册一辆小车（后端注册一辆小车） </Button>
           <br/>
           <Button type='primary' onClick={this.sendTestPathInfo.bind(this)}>流程2：注册上来后，起始位置在原点，直接去顶部停靠点（更新小车的 pathinfo ） </Button>

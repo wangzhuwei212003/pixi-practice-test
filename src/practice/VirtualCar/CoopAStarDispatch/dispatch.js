@@ -447,7 +447,7 @@ export const preGoUp = async function (uid) {
 
 // 更新 Odom 接口，接收位置报告。（接收到的是小格）
 export const setStartNode = function (uid, odom) {
-  console.log('setStartNode occur');
+  // console.log('setStartNode occur');
   // 排错
   let checkIndex = uidArr.findIndex((ele) => {
     return ele === uid;
@@ -536,30 +536,6 @@ const initializePathTable = function () {
   const _matrixZero = matrixZero; // matrixZero 是不会变的。
   let startRow, startCol; // 这个是为了寻找当前点的 priority，是 this.goalTable 里的第一个元素
   let _pathTable = Array(_unitsNum).fill([]); // 重置 pathtable，初始化当前的 pathTable。
-  let stopForOdomInvalid = false;
-
-  // 检查每一辆小车的 odomvalid 情况。
-  for (let i = 0; i < uidArr.length; i += 1) {
-    const optUid = uidArr[i];
-    const optShuttle = shuttles[optUid];
-    const LOGGER = optShuttle.splitLogger;
-    if (!optShuttle.odomValid) {
-      if (showDispatchLog) LOGGER.warn('uid', optUid, 'odom invalid');
-      stopForOdomInvalid = true;
-    }
-  } // end for loop
-
-  // 如果有一辆车的odom超时，就停止所有小车，给小车发速度的命令已经完成
-  if (stopForOdomInvalid) {
-    for (let i = 0; i < uidArr.length; i += 1) {
-      const optUid = uidArr[i];
-      const optShuttle = shuttles[optUid];
-      const LOGGER = optShuttle.splitLogger;
-      if (showDispatchLog) LOGGER.warn('uid', optUid, 'odom invalid stop');
-      Util.sendVelocity(0, optShuttle, 0, 0, 0, 0, i, goingUpTable[i]);
-    } // end for loop
-    return; //下面的for循环是为了给小车发送速度。下面的不用执行了。
-  }
 
   const priorityHeap = new Heap(function (nodeA, nodeB) {
     return -(nodeA.p - nodeB.p); // priority 大的先pop出来
@@ -605,68 +581,36 @@ const initializePathTable = function () {
     // const curGoalCol = endNodeArr[1];
     const arrive = reachGoal[optIndex];
 
-    const LOGGER = optShuttle.splitLogger;
-    // console.info('uid',optUid,'priority:', obj['p']);
-
     if (goingUpTable[optIndex]) {
       // 如果是向上取货，要保证未来的路径是能够占到的
       _searchDeepth = rowNum;
     }
 
     const obInTheWay = Util.checkObstacle(optIndex, optRow, optCol, trackById); // 判断上升列有没有小车占位，有的话就是直接待在原地，不规划路径。
-    if (obInTheWay || !optShuttle.odomValid) {
+    if (obInTheWay) {
       // 1. 区间控制判断有障碍
       _pathTable[optIndex] = Array(_searchDeepth).fill([optRow, optCol]); // 当 i = 0 的时候，就是整个 path
 
-      // if (showDispatchLog) LOGGER.warn('uid', optUid, '有障碍'); // 这个是实时规划的，用于避障的path
-      // if (showDispatchLog) LOGGER.warn('uid', optUid, 'optShuttle.registered：', optShuttle.registered);
-
       if (optShuttle.registered && !arrive) {
-        if (showDispatchLog && obInTheWay) LOGGER.warn('uid', optUid, '有障碍，就直接发速度 0.'); // 这个是实时规划的，用于避障的path
-        if (showDispatchLog && !optShuttle.odomValid) LOGGER.warn('uid', optUid, '没有odom，就直接发速度 0.'); // 这个是实时规划的，用于避障的path
+        if (showDispatchLog && obInTheWay) console.warn('uid', optUid, '有障碍，就直接发速度 0.'); // 这个是实时规划的，用于避障的path
         Util.sendVelocity(0, optShuttle, 0, 0, 0, 0, optIndex, goingUpTable[optIndex]);
       }
     } else if (arrive) {
       // 2. 到达终点 && 就是分配的终点. 通过 80 判断到达终点
-      if (showDispatchLog) LOGGER.warn('uid', optUid, '到达终点 && 就是分配的终点'); // 这个是实时规划的，用于避障的path
+      if (showDispatchLog) console.warn('uid', optUid, '到达终点 && 就是分配的终点'); // 这个是实时规划的，用于避障的path
 
       let path = Array(_searchDeepth).fill([optRow, optCol]);
       _pathTable[optIndex] = path;
-      if (showDispatchLog) LOGGER.warn('uid', optUid, '已经到达终点，没有寻路，直接实时规划的路径：', path); // 这个是实时规划的，用于避障的path
-      if (showDispatchLog) LOGGER.warn('uid', optUid, 'optShuttle.registered：', optShuttle.registered);
+      if (showDispatchLog) console.warn('uid', optUid, '已经到达终点，没有寻路，直接实时规划的路径：', path); // 这个是实时规划的，用于避障的path
+      if (showDispatchLog) console.warn('uid', optUid, 'optShuttle.registered：', optShuttle.registered);
 
       if (optShuttle.registered && !arrive) {
         Util.sendVelocity(path, optShuttle, shiftingArr[optIndex], endNodeArr, odomArr[optIndex], teethAndActionArr[optIndex], optIndex, goingUpTable[optIndex]);
       }
-    }
-    /*   else if (optRow === 0 && optCol === 1 && !avoidDeadLock[optIndex]) {
-     // 在这个特殊点，做判断
-     if (checkIfCancelCancelCurTarget(optIndex)) {
-     // 如果是判断需要重新规划路径，首先设 0 速。
-     optShuttle.sendSpeedToShuttle(0, 'SPEED_PRIORITY_AUTO_CONTROLLER');
-     // 2. 找需要经过的列，暂定最后一列
-     // 怎么避免重复发路径？在分配任务的时候避免死锁
-     if (optShuttle.zeroSpeed) {
-     optShuttle.cancelCurrentTargetActions(); // 速度为0，取消掉当前的目标路径。
-     // 设目标，发路径
-     const avoidMap = Util.generateAvoidMatrix();
-     const newPath = setGoal(optUid, boxRowNum - curGoalRow / 4, curGoalCol / 4, avoidMap);
-     optShuttle.sendTargetActionToShuttle(newPath);
-     avoidDeadLock[optIndex] = true;
-     } else {
-     // do nothing, 但是速度设 0 已经发下去了。
-     }
-     } else {
-     // do nothing，不需要避免死锁。
-     }
-     } else if (optRow === 0 && optCol > 1 && avoidDeadLock[optIndex]) {
-     // 改回来
-     avoidDeadLock[optIndex] = false;
-     } */
-    else {
+    } else {
       // 4. 在路上，根据路径发速度  // 剩下的条件交给规划路径的方法。
 
-      if (showDispatchLog) LOGGER.warn('_searchDeepth', _searchDeepth); // 这个是实时规划的，用于避障的path
+      if (showDispatchLog) console.warn('_searchDeepth', _searchDeepth); // 这个是实时规划的，用于避障的path
 
       const loadBox = optShuttle.loadBox ||
           (
@@ -678,41 +622,29 @@ const initializePathTable = function () {
       const finder = new HCCoopFinder();
       let path = finder.findPath(optIndex, goalTable, _searchDeepth, _pathTable, _matrixZero, rowNum, colNum, false, goingUpTable[optIndex], loadBox, shiftingArr, wheelToChainArr);
 
-      if (showDispatchLog) LOGGER.warn('uid', optUid, '根据路径发速度. 实时规划的路径：', path); // 这个是实时规划的，用于避障的path
+      if (showDispatchLog) console.warn('uid', optUid, '根据路径发速度. 实时规划的路径：', path); // 这个是实时规划的，用于避障的path
 
       if (path.length === 0) {
         // 如果是没有找到路径，是返回的[]，当前的位置也是不合法的，当前的位置被优先级更高的小车占用了。
-        if (showDispatchLog) LOGGER.warn('uid', optUid, 'fail to find a path，没有找到路径，强行返回一个待在原地的路径'); // 这个是实时规划的，用于避障的path
+        if (showDispatchLog) console.warn('uid', optUid, 'fail to find a path，没有找到路径，强行返回一个待在原地的路径'); // 这个是实时规划的，用于避障的path
         path = Array(_searchDeepth).fill([optRow, optCol]);
       }
 
       let curSpeed = optShuttle.curSpeed; // 获得小车的当前速度，
-      // let PASS_PIN_Velocity = optShuttle.shuttleConfig.gate_speed; // 过活门速度
       let MAX_SPEED = optShuttle.shuttleConfig.max_speed; //
 
       let occupySteps = _searchDeepth; // 这次规划出来的路径，前面多少个时间片内，路径保持当前位置
       if (curSpeed > 0) {
         occupySteps = Math.round(MAX_SPEED / (curSpeed)); // 生成占位的路径的时候，考虑速度的比例。
       }
-
       if (occupySteps >= _searchDeepth) occupySteps = _searchDeepth - 1; // 保证至少有一格，让 firstStep 不为 undefined
-
-      // //如果是在中间拣货位下降列转换成水平的时候，occupySteps不能太多在原地，必须延伸出去。
-      // if(optRow > 0 && optRow < specialHeightStartRow && optCol >= firstGoDownCol && optCol <= lastGoDownCol){
-      //   if (occupySteps >= 6) occupySteps = 6; // 这个数字不能超过searchDeepth，否则转弯容易撞。
-      // }
-
-      // 占位直接最大速度 / 当前速度
-      // 如果是低速，前两格占位2个timestep. 定速度，定格子，按照最大速度。极端情况前面的车龟速走，后面最高速跑过来。
       let occupyPath = path.slice(0, path.length - occupySteps); // slice 会返回一个新数组，path的searchdeepth
       let firstStep = occupyPath[0];
-      // occupyPath.splice(1, 0, secondStep); // splice 是直接改原来的数组。第一步占3个timestep，第二步占2个timestep
       for (let i = 0; i < occupySteps; i++) {
         occupyPath.splice(1, 0, firstStep);
       }
 
       _pathTable[optIndex] = occupyPath; // 速度低的时候根据occupySteps的值来算原地占格子的数量
-      // if (showDispatchLog) LOGGER.warn('uid', optUid, 'optShuttle.registered：', optShuttle.registered);
       if (optShuttle.registered && !arrive) {
         // 实际发速度还是按照规划好的path计算速度
         Util.sendVelocity(path, optShuttle, shiftingArr[optIndex], endNodeArr, odomArr[optIndex], teethAndActionArr[optIndex], optIndex, goingUpTable[optIndex]);
@@ -1053,7 +985,7 @@ const checkGoUp = function (optIndex, goalRow, goalCol, goalTable, shuttle, targ
   }
 };
 
-export const findIdleUidOb = async function (optIndex, LOGGER, path) {
+export const findIdleUidOb = async function (optIndex, path) {
   // optIndex 是被挡住的小车 index
   // path 是一个二维数组，一串点组成的 path
 
@@ -1061,13 +993,9 @@ export const findIdleUidOb = async function (optIndex, LOGGER, path) {
   const _haveTask = false; // 现在直接是 false
   // const _haveTask = await haveTask();
 
-  // if (_haveTask) {
-  //   if (showDispatchLog) LOGGER.warn('还有任务，不存在空闲的挡路小车');
-  //   return null;
-  // }
 
   if (!goalTable[optIndex]) {
-    if (showDispatchLog) LOGGER.warn('goalTable[optIndex] undefined，没有找到空闲挡路小车');
+    if (showDispatchLog) console.warn('goalTable[optIndex] undefined，没有找到空闲挡路小车');
     return null;
   }// 删车的时候会 goalTable[optIndex] undefined
 
@@ -1086,7 +1014,7 @@ export const findIdleUidOb = async function (optIndex, LOGGER, path) {
   //分情况： 1. 堵在了上升列。2. 堵在了中间货位。3. 堵在了最底下一行，或者是接近最底下一行
   if (curCol < firstGoDownCol && curRow >= 0) {
     // 1. 堵在了上升列，那么前面的小车就是在第一个拣货位的
-    if (showDispatchLog) LOGGER.warn('1. 堵在了上升列，那么前面的小车就是在第一个拣货位的');
+    if (showDispatchLog) console.warn('1. 堵在了上升列，那么前面的小车就是在第一个拣货位的');
     targetIndex = trackById.findIndex((ele, index) => {
       if (index === optIndex) {
         return false;
@@ -1107,7 +1035,7 @@ export const findIdleUidOb = async function (optIndex, LOGGER, path) {
 
     // targetIndex 可能是负数
     if (targetIndex === -1) {
-      if (showDispatchLog) LOGGER.warn('target index is -1');
+      if (showDispatchLog) console.warn('target index is -1');
       return null;
     } else {
       let optUid = uidArr[targetIndex];
@@ -1115,17 +1043,17 @@ export const findIdleUidOb = async function (optIndex, LOGGER, path) {
       const curSpeedRPM = shuttles[optUid].curSpeedRPM; // 小车当前速度
 
       if (!shuttles[optUid].consumeJobPause && _haveTask) {
-        if (showDispatchLog) LOGGER.warn('挡路小车还有任务，且没有取消接收任务，uid', optUid);
+        if (showDispatchLog) console.warn('挡路小车还有任务，且没有取消接收任务，uid', optUid);
         return null;
       }
 
       if (shuttles[optUid].status === 0 && arrive) {
         // 如果这个小车是空闲的
-        if (showDispatchLog) LOGGER.warn('到前方挡路的小车,空闲，status：', shuttles[optUid].status, 'arrive:', arrive, 'curSpeedRPM:', curSpeedRPM);
+        if (showDispatchLog) console.warn('到前方挡路的小车,空闲，status：', shuttles[optUid].status, 'arrive:', arrive, 'curSpeedRPM:', curSpeedRPM);
         return optUid; // 返回一个 uid
       } else {
-        if (showDispatchLog) LOGGER.warn('到前方挡路的小车，但不是空闲，status：', shuttles[optUid].status, 'arrive:', arrive, 'curSpeedRPM:', curSpeedRPM);
-        let topFirst = findFirstShuttleTopRowParking(LOGGER);
+        if (showDispatchLog) console.warn('到前方挡路的小车，但不是空闲，status：', shuttles[optUid].status, 'arrive:', arrive, 'curSpeedRPM:', curSpeedRPM);
+        let topFirst = findFirstShuttleTopRowParking(console);
         if (topFirst) {
           return topFirst;
         }
@@ -1136,7 +1064,7 @@ export const findIdleUidOb = async function (optIndex, LOGGER, path) {
       curCol >= firstGoDownCol && curCol <= lastGoDownPickCol && curRow <= rowNum - 2 - occupyRowConfig
   ) {
     // 2. 堵在了中间货位。这里是开始往下找挡路的且空闲的小车
-    if (showDispatchLog) LOGGER.warn('2. 堵在了中间货位。这里是开始往下找挡路的且空闲的小车');
+    if (showDispatchLog) console.warn('2. 堵在了中间货位。这里是开始往下找挡路的且空闲的小车');
     targetIndex = trackById.findIndex((ele, index) => {
       if (index === optIndex) {
         return false;
@@ -1159,13 +1087,13 @@ export const findIdleUidOb = async function (optIndex, LOGGER, path) {
 
     // targetIndex 可能是负数
     if (targetIndex === -1) {
-      if (showDispatchLog) LOGGER.warn('target index is -1');
+      if (showDispatchLog) console.warn('target index is -1');
       return null;
     } else {
       let optUid = uidArr[targetIndex];
 
       if (goalTable[targetIndex][0][0] === 0 && !checkFirstIdleGo()) {
-        if (showDispatchLog) LOGGER.warn('如果前面的小车在顶部一行，并且中间没有拣货的小车就不被挤走，checkFirstIdleGo：', checkFirstIdleGo());
+        if (showDispatchLog) console.warn('如果前面的小车在顶部一行，并且中间没有拣货的小车就不被挤走，checkFirstIdleGo：', checkFirstIdleGo());
         return null; // 如果前面的小车在顶部一行，并且中间没有拣货的小车就不被挤走，null。 加了 checkShutdownStartGoDown 是因为有可能上面有小车是需要让路。
       }
 
@@ -1175,19 +1103,19 @@ export const findIdleUidOb = async function (optIndex, LOGGER, path) {
       const curSpeedRPM = shuttles[optUid].curSpeedRPM; // 小车当前速度
 
       if (!shuttles[optUid].consumeJobPause && _haveTask) {
-        if (showDispatchLog) LOGGER.warn('挡路小车还有任务，且没有取消接收任务，uid', optUid);
+        if (showDispatchLog) console.warn('挡路小车还有任务，且没有取消接收任务，uid', optUid);
         return null;
       }
 
       if (shuttles[optUid].status === 0 && arrive) {
         // 如果这个小车是空闲的
-        if (showDispatchLog) LOGGER.warn('到前方挡路的小车,空闲，status：', shuttles[optUid].status, 'arrive:', arrive, 'curSpeedRPM:', curSpeedRPM);
+        if (showDispatchLog) console.warn('到前方挡路的小车,空闲，status：', shuttles[optUid].status, 'arrive:', arrive, 'curSpeedRPM:', curSpeedRPM);
         return optUid; // 返回一个 uid
       } else {
-        if (showDispatchLog) LOGGER.warn('到前方挡路的小车，但不是空闲，status：', shuttles[optUid].status, 'arrive:', arrive, 'curSpeedRPM:', curSpeedRPM);
+        if (showDispatchLog) console.warn('到前方挡路的小车，但不是空闲，status：', shuttles[optUid].status, 'arrive:', arrive, 'curSpeedRPM:', curSpeedRPM);
         if (curRow === 0) {
           // 如果是堵在顶部一行。
-          let topFirst = findFirstShuttleTopRowParking(LOGGER);
+          let topFirst = findFirstShuttleTopRowParking(console);
           if (topFirst) {
             return topFirst;
           }
@@ -1201,7 +1129,7 @@ export const findIdleUidOb = async function (optIndex, LOGGER, path) {
       curCol >= 8
   ) {
     // 3. 堵在了最底下一行，或者是接近最底下一行。
-    if (showDispatchLog) LOGGER.warn('2. 堵在了最底下一行，或者是接近最底下一行。');
+    if (showDispatchLog) console.warn('2. 堵在了最底下一行，或者是接近最底下一行。');
     targetIndex = trackById.findIndex((ele, index) => {
       if (index === optIndex) {
         return false;
@@ -1223,13 +1151,13 @@ export const findIdleUidOb = async function (optIndex, LOGGER, path) {
 
     // targetIndex 可能是负数
     if (targetIndex === -1) {
-      if (showDispatchLog) LOGGER.warn('target index is -1');
+      if (showDispatchLog) console.warn('target index is -1');
       return null;
     } else {
       let optUid = uidArr[targetIndex];
 
       if (goalTable[targetIndex][0][0] === rowNum - 1 && !checkFirstIdleGo()) {
-        if (showDispatchLog) LOGGER.warn('如果前面的小车在底部一行，并且中间没有拣货的小车就不被挤走，checkFirstIdleGo：', checkFirstIdleGo());
+        if (showDispatchLog) console.warn('如果前面的小车在底部一行，并且中间没有拣货的小车就不被挤走，checkFirstIdleGo：', checkFirstIdleGo());
         return null; // 如果前面的小车在最底一行，并且中间没有拣货的小车就不被挤走，null。 加了 checkShutdownStartGoDown 是因为有可能上面有小车是需要拣货下来。
       }
 
@@ -1239,22 +1167,22 @@ export const findIdleUidOb = async function (optIndex, LOGGER, path) {
       const curSpeedRPM = shuttles[optUid].curSpeedRPM; // 小车当前速度
 
       if (!shuttles[optUid].consumeJobPause && _haveTask) {
-        if (showDispatchLog) LOGGER.warn('挡路小车还有任务，且没有取消接收任务，uid', optUid);
+        if (showDispatchLog) console.warn('挡路小车还有任务，且没有取消接收任务，uid', optUid);
         return null;
       }
 
       if (shuttles[optUid].status === 0 && arrive) {
         // 如果这个小车是空闲的
-        if (showDispatchLog) LOGGER.warn('到前方挡路的小车,空闲，status：', shuttles[optUid].status, 'arrive:', arrive, 'curSpeedRPM:', curSpeedRPM);
+        if (showDispatchLog) console.warn('到前方挡路的小车,空闲，status：', shuttles[optUid].status, 'arrive:', arrive, 'curSpeedRPM:', curSpeedRPM);
         return optUid; // 返回一个 uid
       } else {
-        if (showDispatchLog) LOGGER.warn('到前方挡路的小车，但不是空闲，status：', shuttles[optUid].status, 'arrive:', arrive, 'curSpeedRPM:', curSpeedRPM);
+        if (showDispatchLog) console.warn('到前方挡路的小车，但不是空闲，status：', shuttles[optUid].status, 'arrive:', arrive, 'curSpeedRPM:', curSpeedRPM);
         return null; // 不是空闲，返回 null
       }
     }
 
   } else {
-    if (showDispatchLog) LOGGER.warn('没有考虑到的情况，小车当前位置：', 'curRow', curRow, 'curCol', curCol);
+    if (showDispatchLog) console.warn('没有考虑到的情况，小车当前位置：', 'curRow', curRow, 'curCol', curCol);
     return null;
   }
 

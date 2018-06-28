@@ -16,7 +16,7 @@ export const addOneMore = function (uid) {
   // 过几秒钟就直接注册成功， command ID 79
   setTimeout(() => {
     shuttles[uid].handleCmdMsg('79');
-    console.log('注册成功，发出命令 79')
+    console.log('延时1秒，发送命令 79. 注册成功，发出命令 79')
   }, 1000);
 
 };

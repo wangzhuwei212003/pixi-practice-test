@@ -673,27 +673,19 @@ export const CellToTeeth = function (cellRow, cellCol) {
 
 // 根据 path 规划出来的路径，电机的加速度，当前的速度，算出此时应该发多少的速度。
 export const sendVelocity = async function (path, shuttle, shift, endNodeArr, odom, teethAndAction, optIndex, goingUp) {
-  const LOGGER = shuttle.splitLogger;
-
 
   if (!teethAndAction.total_teeth) {
     return; // 如果传过来的是空数组，就return。这种就是小车没有路径。
   }
-  if (showDispatchLog) LOGGER.warn('odomValid，', shuttle.odomValid);
-  if (!shuttle.odomValid) {
-    if (showDispatchLog) LOGGER.warn('sendVelocity, 没有odom，发送速度 0', 0);
-    shuttle.sendSpeedToShuttle(0, 'SPEED_PRIORITY_AUTO_CONTROLLER');
-    return; //直接发0速之后return
-  }
 
   if (path === 0) {
     // 直接根据区间控制 判断是前方有障碍的。
-    if (showDispatchLog) LOGGER.warn('sendVelocity, 区间控制判断需要避障，发送速度 0', 0);
+    if (showDispatchLog) console.warn('sendVelocity, 区间控制判断需要避障，发送速度 0', 0);
     shuttle.sendSpeedToShuttle(0, 'SPEED_PRIORITY_AUTO_CONTROLLER');
   }
 
   let currentSpeed = shuttle.curSpeed; // 小车当前速度
-  let curSpeedRPM = shuttle.curSpeedRPM; // 小车当前速度
+  // let curSpeedRPM = shuttle.curSpeedRPM; // 小车当前速度 // 这个不准
   let PASS_PIN_Velocity = shuttle.shuttleConfig.gate_speed; // 过活门速度
   let maxSpeed = shuttle.shuttleConfig.max_speed; // 最大速度
   let ACCELERATION = shuttle.shuttleConfig.deceleration; // 这里我只考虑减速。
@@ -732,18 +724,11 @@ export const sendVelocity = async function (path, shuttle, shift, endNodeArr, od
 
   // 首先是要分别算出两个需要减速的距离
   let delayDist = (validSpeedDuration / 1000) * maxSpeed; // 算上可能的延时（齿）
-  // if (
-  //     haltHalfway &&
-  //     path[ToZeroIndex][0] === 0
-  // ) {
-  //   // 如果是需要因为避障停止，且停的地方是上面一行，要考虑一个车身长
-  //   if (showDispatchLog) LOGGER.info('顶部避障考虑车身长度');
-  //   delayDist += divideCell * normalWidth;
-  // }
+
 
   let PSDist = PSBrakingDist(currentSpeed, PASS_PIN_Velocity, ACCELERATION) + delayDist + avoidDist; // 根据最大速度算出的 减速到过活门速度的刹车距离。
   let ToZeroDist = BrakingDist(currentSpeed, ACCELERATION) + delayDist + avoidDist; // 根据最大速度算出的 减速到 0 的刹车距离。
-  // if (showDispatchLog) LOGGER.info('maxSpeed', maxSpeed, 'PASS_PIN_Velocity', PASS_PIN_Velocity, 'ACCELERATION',ACCELERATION, 'PSDist',PSDist, 'ToZeroDist',ToZeroDist);
+  // if (showDispatchLog) console.info('maxSpeed', maxSpeed, 'PASS_PIN_Velocity', PASS_PIN_Velocity, 'ACCELERATION',ACCELERATION, 'PSDist',PSDist, 'ToZeroDist',ToZeroDist);
 
   let distToStop, distToPS; // 根据路径规划算出的当前还剩多少距离需要停止、过活门
   const Actions = teethAndAction.Actions; // 一个数组，每一个元素都是obj。
@@ -751,36 +736,36 @@ export const sendVelocity = async function (path, shuttle, shift, endNodeArr, od
   let distToStop_obj = calcTeeth(path.slice(0, ToZeroIndex), shift, 0, goingUp, shuttle.shuttleConfig.wheel); // 改为0，因为 calcTeeth里已经去头了。shift标识当前位置的偏移。
   distToStop = distToStop_obj.total_teeth - shift; // 这个 shift 是当前位置的偏移量。这个是正的。
   if (distToStop < 0) {
-    if (showDispatchLog) LOGGER.warn('需要停止的距离是负数', distToStop, '设为零');
+    if (showDispatchLog) console.warn('需要停止的距离是负数', distToStop, '设为零');
     distToStop = 0;
   }
   // 以上，算出需要停止的距离，和 刹车所需要的距离 比较。此时不用考虑伸pin、缩pin
 
 
   if (haltHalfway && distToStop <= ToZeroDist) {
-    if (curSpeedRPM === 0) {
+    if (currentSpeed === 0) {
       // 这里本来是想写 === 0.但是速度不是绝对是0的。
-      let obUid = await findIdleUidOb(optIndex, LOGGER, path); // 当前小车、被挡住的小车的optIndex，
+      let obUid = await findIdleUidOb(optIndex, path); // 当前小车、被挡住的小车的optIndex，
       // 因为避障停止，且找到了前方的、空闲的小车 uid。
       // 找一列当前车最少的列的顶部。
       if (obUid !== null) {
         let obIndex = findIndexByUid(obUid);
         let parkingGoal = findParkingGoal(obIndex);// 找到当前车最少的一列，设置目标为该列，没有车的地方
 
-        if (showDispatchLog) LOGGER.warn('找到空闲且挡路的小车，设置终点', obUid, parkingGoal);
-        await shuttles[obUid].stopConsume(); // 找到小车之后，给小车取消接收任务，直到小车到达目的地恢复任务。
+        if (showDispatchLog) console.warn('找到空闲且挡路的小车，设置终点', obUid, parkingGoal);
+        // await shuttles[obUid].stopConsume(); // 找到小车之后，给小车取消接收任务，直到小车到达目的地恢复任务。
 
         const pathinfo = setGoal(obUid, parkingGoal[0], parkingGoal[1]);
-        shuttles[obUid].status = 12; // 空闲小车被挤走之后，status变为12.
+        // shuttles[obUid].status = 12; // 空闲小车被挤走之后，status变为12.
         shuttles[obUid].sendTargetActionToShuttle(pathinfo);
       } else {
         // 没有找到，找空闲挡路的小车方法出现了 问题。
-        if (showDispatchLog) LOGGER.warn('没有找到空闲且挡路的小车。');
+        if (showDispatchLog) console.warn('没有找到空闲且挡路的小车。');
       }
     }
 
     // 1. 避障原因需要中途停。而不是终点
-    if (showDispatchLog) LOGGER.warn('需要避障，发送减速', 0, 'sendSpeedToShuttle', 0);
+    if (showDispatchLog) console.warn('需要避障，发送减速', 0, 'sendSpeedToShuttle', 0);
     shuttle.sendSpeedToShuttle(0, 'SPEED_PRIORITY_AUTO_CONTROLLER');
 
   } else {
@@ -819,13 +804,13 @@ export const sendVelocity = async function (path, shuttle, shift, endNodeArr, od
     ) {
       // TODO: S形弯道减速，改配置。
       // 如果不需要避障，在S形弯道的时候，减速是优先级最高。下降列S形弯道提前 2 小格
-      if (showDispatchLog) LOGGER.warn('S形弯道，sendSpeedToShuttle,发送过活门速度', PASS_PIN_Velocity);
+      if (showDispatchLog) console.warn('S形弯道，sendSpeedToShuttle,发送过活门速度', PASS_PIN_Velocity);
       shuttle.sendSpeedToShuttle(PASS_PIN_Velocity, 'SPEED_PRIORITY_AUTO_CONTROLLER');
     } else if (lastAction && lastAction.specific_action === 'SA_PIN_OUTSTRETCH') {
       // 以下，是按照优先级，伸pin前需要减速。或者开始转弯
       // fix: pin 伸完了之后会有一个发送高速的动作
-      if (showDispatchLog) LOGGER.info('上一个动作是伸pin，发送活门速度');
-      if (showDispatchLog) LOGGER.warn('sendSpeedToShuttle,发送过活门速度', PASS_PIN_Velocity);
+      if (showDispatchLog) console.info('上一个动作是伸pin，发送活门速度');
+      if (showDispatchLog) console.warn('sendSpeedToShuttle,发送过活门速度', PASS_PIN_Velocity);
       shuttle.sendSpeedToShuttle(PASS_PIN_Velocity, 'SPEED_PRIORITY_AUTO_CONTROLLER');
     } else if (action && (
             action.specific_action === 'SA_PIN_OUTSTRETCH' ||
@@ -833,14 +818,14 @@ export const sendVelocity = async function (path, shuttle, shift, endNodeArr, od
         )) {
       // 2-1. 下一个动作是伸pin，或者是开始转弯
       distToPS = Math.abs(action.target_teeth - total_teeth_from_origin); // 还剩多少距离需要伸pin 或转弯。确保是正数
-      if (showDispatchLog) LOGGER.info('伸pin前或者开始转弯前需要减速，target_teeth:', action.target_teeth, '还剩多少距离，distToPS：', distToPS, '减速到过活门速度的刹车距离,PSDist:', PSDist);
+      if (showDispatchLog) console.info('伸pin前或者开始转弯前需要减速，target_teeth:', action.target_teeth, '还剩多少距离，distToPS：', distToPS, '减速到过活门速度的刹车距离,PSDist:', PSDist);
       if (distToPS <= PSDist) {
-        if (showDispatchLog) LOGGER.warn('sendSpeedToShuttle,发送过活门速度', PASS_PIN_Velocity);
+        if (showDispatchLog) console.warn('sendSpeedToShuttle,发送过活门速度', PASS_PIN_Velocity);
         shuttle.sendSpeedToShuttle(PASS_PIN_Velocity, 'SPEED_PRIORITY_AUTO_CONTROLLER');
       } else {
         // 如果没有小余刹车距离就不发什么速度。
         // 这里不能什么都不发，这里应该是发最大速度
-        if (showDispatchLog) LOGGER.warn('sendSpeedToShuttle,下一个转弯点超过刹车距离，发送最大速度', maxSpeed);
+        if (showDispatchLog) console.warn('sendSpeedToShuttle,下一个转弯点超过刹车距离，发送最大速度', maxSpeed);
         shuttle.sendSpeedToShuttle(maxSpeed, 'SPEED_PRIORITY_AUTO_CONTROLLER');
       }
     } else if (
@@ -855,10 +840,10 @@ export const sendVelocity = async function (path, shuttle, shift, endNodeArr, od
       // 有这个action就是有方向改变，转弯结束
       if (distToGoal <= ToZeroDist || total_teeth_from_origin - lastAction.target_teeth < slowPassGate) {
         // 还要加上一个值，让小车完全慢速的过完活门。
-        if (!!showDispatchLog) LOGGER.info('转弯结束，且距离终点小于刹车距离，不发速度，交给电机，改为一直发速度');
+        if (!!showDispatchLog) console.info('转弯结束，且距离终点小于刹车距离，不发速度，交给电机，改为一直发速度');
         shuttle.sendSpeedToShuttle(PASS_PIN_Velocity, 'SPEED_PRIORITY_AUTO_CONTROLLER');
       } else {
-        if (showDispatchLog) LOGGER.warn('sendSpeedToShuttle,转弯结束，且距离终点大于刹车距离，发送最大速度', maxSpeed);
+        if (showDispatchLog) console.warn('sendSpeedToShuttle,转弯结束，且距离终点大于刹车距离，发送最大速度', maxSpeed);
         shuttle.sendSpeedToShuttle(maxSpeed, 'SPEED_PRIORITY_AUTO_CONTROLLER');
       }
     } else if (Actions.length === 0 && total_teeth !== 0) {
@@ -866,34 +851,34 @@ export const sendVelocity = async function (path, shuttle, shift, endNodeArr, od
       if (distToGoal <= ToZeroDist) {
         if (Math.abs(total_teeth_from_origin) < 3) {
           // 刚开始的时候，给一个速度，之后就不管了
-          if (showDispatchLog) LOGGER.warn('sendSpeedToShuttle,同一列中的取货箱，刚开始3个齿数内发一个过活门速度', PASS_PIN_Velocity);
+          if (showDispatchLog) console.warn('sendSpeedToShuttle,同一列中的取货箱，刚开始3个齿数内发一个过活门速度', PASS_PIN_Velocity);
           shuttle.sendSpeedToShuttle(PASS_PIN_Velocity, 'SPEED_PRIORITY_AUTO_CONTROLLER');
         } else {
-          if (showDispatchLog) LOGGER.info('转弯结束，且距离终点小于刹车距离，不发速度，交给电机，改为一直发速度');
+          if (showDispatchLog) console.info('转弯结束，且距离终点小于刹车距离，不发速度，交给电机，改为一直发速度');
           shuttle.sendSpeedToShuttle(PASS_PIN_Velocity, 'SPEED_PRIORITY_AUTO_CONTROLLER');
-          if (curSpeedRPM === 0 && distToGoal > 0) {
+          if (currentSpeed === 0 && distToGoal > 0) {
             // 如果速度是0，且没到终点，给一个活门速度
-            if (showDispatchLog) LOGGER.warn('sendSpeedToShuttle,当前速度为0，发送一个活门速度', PASS_PIN_Velocity);
+            if (showDispatchLog) console.warn('sendSpeedToShuttle,当前速度为0，发送一个活门速度', PASS_PIN_Velocity);
             shuttle.sendSpeedToShuttle(PASS_PIN_Velocity, 'SPEED_PRIORITY_AUTO_CONTROLLER');
           }
         }
       } else {
-        if (showDispatchLog) LOGGER.warn('sendSpeedToShuttle, 同一列中的取货箱，且距离终点大于刹车距离，发送最大速度', maxSpeed);
+        if (showDispatchLog) console.warn('sendSpeedToShuttle, 同一列中的取货箱，且距离终点大于刹车距离，发送最大速度', maxSpeed);
         shuttle.sendSpeedToShuttle(maxSpeed, 'SPEED_PRIORITY_AUTO_CONTROLLER');
       }
     } else {
       // 2-3. action是undefined，最后一个动作了。到终点。还有什么情况漏掉的？
 
-      if (showDispatchLog) LOGGER.warn('sendSpeedToShuttle,没有考虑到的情况,发送过活门速度', PASS_PIN_Velocity);
+      if (showDispatchLog) console.warn('sendSpeedToShuttle,没有考虑到的情况,发送过活门速度', PASS_PIN_Velocity);
       shuttle.sendSpeedToShuttle(PASS_PIN_Velocity, 'SPEED_PRIORITY_AUTO_CONTROLLER');
 
     }
     /* %%%%%%%%%%%% 没有障碍，等同单车，情况分类结束 %%%%%%%%%%%%*/
   }
   if (showDispatchLog) {
-    LOGGER.info('已走过的齿数：', total_teeth_from_origin, '当前速度（齿每秒）：', currentSpeed, '当前速度（curSpeedRPM）：', curSpeedRPM);
-    LOGGER.info('actions', teethAndAction);
-    LOGGER.warn('(避障)还剩多少需要停止：', distToStop, '还剩多少需要伸pin：', distToPS, '刹车距离：', ToZeroDist, '刹到活门速度距离', PSDist);
+    console.info('已走过的齿数：', total_teeth_from_origin, '当前速度（齿每秒）：', currentSpeed, '当前速度（currentSpeed）：', currentSpeed);
+    console.info('actions', teethAndAction);
+    console.warn('(避障)还剩多少需要停止：', distToStop, '还剩多少需要伸pin：', distToPS, '刹车距离：', ToZeroDist, '刹到活门速度距离', PSDist);
   }
 
 };

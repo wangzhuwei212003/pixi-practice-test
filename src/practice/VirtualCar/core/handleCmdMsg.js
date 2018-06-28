@@ -19,7 +19,7 @@ export const handleCmdMsgSwitch = function (msg) {
     case '79':
       // shuttles 里面已经添加，TODO 在 dispatch 里添加一个小车。并更新一个往上方停靠点的路径
       this.registered = true;
-
+      console.log('修改小车 register 为 true');
       console.log('shuttles' ,shuttles);
       console.log('this.uid' , this.uid);
 
@@ -27,6 +27,7 @@ export const handleCmdMsgSwitch = function (msg) {
       console.log('在 dispatch 里添加一个小车, uid:', this.uid);
       setTimeout(() => {
         dispatch.preGoUp(this.uid);
+        console.log('1秒后给小车发送前往顶部停靠点的路径。');
       }, 1000);
       break;
 
