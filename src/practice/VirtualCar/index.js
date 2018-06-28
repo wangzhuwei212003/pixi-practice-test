@@ -96,14 +96,14 @@ export default class VirtualCar extends Component {
         let circle = new PIXI.Graphics();
         circle.beginFill(0x554455);
         // circle.beginFill(0x9966FF);
-        circle.drawCircle(0, 0, 32);
+        circle.drawCircle(0, 0, config.pixelGap/2);
         circle.endFill();
-        circle.x = colIndex * 100;
-        circle.y = rowIndex * 100;
+        circle.x = colIndex * config.pixelGap;
+        circle.y = rowIndex * config.pixelGap;
         maps.addChild(circle);
       }
     }
-    maps.position.set(0,120);
+    maps.position.set(0,config.pixelGap);
     this.stage.addChild(maps);
   }
 
@@ -112,20 +112,20 @@ export default class VirtualCar extends Component {
     this.state.car.updateOdomByTime(50); // 这里的参数是每次循环，小车走过的实际时间。
     // this.state.car.updateOdomTest(100);
     // console.log(this.state.car.odom);
-    this.state.sprite.y = config.bigRowNum * 100 - this.state.car.odom.current_row * 100;
-    this.state.sprite.x = this.state.car.odom.current_column * 100;
+    this.state.sprite.y = config.bigRowNum * config.pixelGap - this.state.car.odom.current_row * config.pixelGap;
+    this.state.sprite.x = this.state.car.odom.current_column * config.pixelGap;
     switch (this.state.car.odom.theoretical_moving_direction.toString()) {
       case config.SpecificActions['SA_ODOM_FORWARD_GROUND_AS_REFERENCE'].toString():
-        this.state.sprite.x += this.state.car.odom.offsetPercent * 100;
+        this.state.sprite.x += this.state.car.odom.offsetPercent * config.pixelGap;
         break;
       case config.SpecificActions['SA_ODOM_BACKWARD_GROUND_AS_REFERENCE'].toString():
-        this.state.sprite.x -= this.state.car.odom.offsetPercent * 100;
+        this.state.sprite.x -= this.state.car.odom.offsetPercent * config.pixelGap;
         break;
       case config.SpecificActions['SA_ODOM_UP_GROUND_AS_REFERENCE'].toString():
-        this.state.sprite.y -= this.state.car.odom.offsetPercent * 100;
+        this.state.sprite.y -= this.state.car.odom.offsetPercent * config.pixelGap;
         break;
       case config.SpecificActions['SA_ODOM_DOWN_GROUND_AS_REFERENCE'].toString():
-        this.state.sprite.y += this.state.car.odom.offsetPercent * 100;
+        this.state.sprite.y += this.state.car.odom.offsetPercent * config.pixelGap;
         break;
     }
   }
@@ -140,8 +140,8 @@ export default class VirtualCar extends Component {
       this.renderer.render(this.stage); // 这句也是关键，这个是改变了之后要重新 render
 
       const endT = Date.now();
-      console.log('循环一步时间：', endT - startT);
-    }, 1); // 这里是循环的频率。每次循环的间隔。
+      // console.log('循环一步时间：', endT - startT);
+    }, 10); // 这里是循环的频率。每次循环的间隔。如果这里的时间设的太短，stop loop 的按钮需要按很多下。不是很灵。
   }
 
   sendTestPathInfo() {
@@ -149,6 +149,7 @@ export default class VirtualCar extends Component {
   }
 
   stopLoop(){
+    console.log('stop loop function occurred');
     clearTimeout(this.loop);
   }
 
