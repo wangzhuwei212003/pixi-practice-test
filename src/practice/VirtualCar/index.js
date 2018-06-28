@@ -9,14 +9,21 @@ import * as PIXI from "pixi.js";
 import {Menu, Icon, Button, Collapse} from 'antd';
 import config from './config';
 import car from './core/car'
+import {
+  shuttles,
+  addOneMore
+} from './core/shuttleInstances'
+import {initialDispatch} from './CoopAStarDispatch/dispatch';
 
 import tileImage from '../../Learning/images/tileset.png'; // 这一步很关键，没有这句话，在下面直接用文件路径是不行的。
-
 const Panel = Collapse.Panel;
 const text = `
-  A dog is a type of domesticated animal.
-  Known for its loyalty and faithfulness,
-  it can be found as a welcome guest in many households across the world.
+  1. 注册一辆小车，
+  2. 注册上来之后，起始位置在原点
+  3. 直接去顶部停靠点
+  4. 到达顶部停靠点之后，分配一个任务（简化为随机生成一个目标点。一个随机的行列数）（分配任务假定耗时2秒，看起来正常点。）
+  5. 开始执行任务的流程
+  6. 任务执行完成之后，再次进行第 4 步，自行找到一个随机目标点。（简化）
 `;
 
 export default class VirtualCar extends Component {
@@ -79,7 +86,6 @@ export default class VirtualCar extends Component {
 
     this.setState({
       sprite: rocket,
-      car: new car(),
     });
 
     this.addMap();
@@ -88,22 +94,22 @@ export default class VirtualCar extends Component {
     this.renderer.render(this.stage);
   }
 
-  addMap(){
+  addMap() {
     let maps = new PIXI.Container();
 
-    for(let rowIndex = 0; rowIndex < config.bigRowNum; rowIndex += 1){
-      for(let colIndex = 0; colIndex < config.bigColNum; colIndex += 1){
+    for (let rowIndex = 0; rowIndex < config.bigRowNum; rowIndex += 1) {
+      for (let colIndex = 0; colIndex < config.bigColNum; colIndex += 1) {
         let circle = new PIXI.Graphics();
         circle.beginFill(0x554455);
         // circle.beginFill(0x9966FF);
-        circle.drawCircle(0, 0, config.pixelGap/2);
+        circle.drawCircle(0, 0, config.pixelGap / 2);
         circle.endFill();
         circle.x = colIndex * config.pixelGap;
         circle.y = rowIndex * config.pixelGap;
         maps.addChild(circle);
       }
     }
-    maps.position.set(0,config.pixelGap);
+    maps.position.set(0, config.pixelGap);
     this.stage.addChild(maps);
   }
 
@@ -146,11 +152,39 @@ export default class VirtualCar extends Component {
 
   sendTestPathInfo() {
     this.state.car.handlePathInfoReceived(config.pathInfo_test1);
+    // 更新小车的当前路径。
+    // 这里应该是调用后端的方法，更改后端的数据。。
+
+    console.log(shuttles);
+    console.log('流程2 ')
+
   }
 
-  stopLoop(){
+  stopLoop() {
     console.log('stop loop function occurred');
     clearTimeout(this.loop);
+  }
+
+  initialDispatch() {
+    initialDispatch();
+  }
+
+  registerOneMore() {
+    // 注册一辆车，初始位置在原点
+    const uid = Date.now();
+    addOneMore(uid);
+    console.log(shuttles); //这个就是做出改变的数据
+    console.log('流程1，添加一辆小车 ')
+
+    // 以上是后端数据
+    this.state.car = shuttles[uid];
+  }
+
+  findNextGoal(){
+    console.log('find next goal...')
+
+    console.log('流程4 ')
+
   }
 
   render() {
@@ -160,7 +194,7 @@ export default class VirtualCar extends Component {
             调度相关的代码和小车交互： <br/>
             1. 发送整个路径 pathInfo，总齿数、actions；<br/>
             2. 实时给小车发送速度. 三档 最大速度、过活门速度、0速 <br/>
-            3. 实时接收小车当前的 odom <br/>
+            3. 实时接收小车当前的 odom (DONE,注册过的小车会以一定的频率给dispatch文件发位置报告。)<br/>
           </p>
           <Collapse accordion>
             <Panel header="路径格式， pathInfo 格式" key="1">
@@ -169,7 +203,7 @@ export default class VirtualCar extends Component {
             <Panel header="位置报告格式，odom 格式" key="2">
               <p>{JSON.stringify(config.Odometry)}</p>
             </Panel>
-            <Panel header="This is panel header 3" key="3">
+            <Panel header="流程：" key="3">
               <p>{text}</p>
             </Panel>
           </Collapse>
@@ -178,6 +212,17 @@ export default class VirtualCar extends Component {
           <Button type='danger' onClick={this.sendTestPathInfo.bind(this)}>send test pathInfo </Button>
           <Button type='dashed' onClick={this.stopLoop.bind(this)}>stop loop </Button>
           <br/>
+          <Button type='primary' onClick={this.initialDispatch.bind(this)}>initial dispatch </Button>
+          <br/>
+          <br/>
+          <Button type='primary' onClick={this.registerOneMore.bind(this)}>流程1：注册一辆小车（后端注册一辆小车） </Button>
+          <br/>
+          <Button type='primary' onClick={this.sendTestPathInfo.bind(this)}>流程2：注册上来后，起始位置在原点，直接去顶部停靠点（更新小车的 pathinfo ） </Button>
+          <br/>
+          <Button type='primary' onClick={this.gameLoop.bind(this)}>流程2-1：开始运动 </Button>
+          <br/>
+          <Button type='primary' onClick={this.findNextGoal.bind(this)}>流程4：到达之后，找一个随机目标点，生成下一段 pathinfo </Button>
+
         </div>
     );
   }
