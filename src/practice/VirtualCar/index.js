@@ -69,7 +69,7 @@ export default class VirtualCar extends Component {
   }
 
   setUp() {
-    let texture = PIXI.TextureCache[tileImage];
+    let texture = PIXI.utils.TextureCache[tileImage];
     let rectangle = new PIXI.Rectangle(192, 128, 64, 64); //(x, y, width, height);
     texture.frame = rectangle;
     let rocket = new PIXI.Sprite(texture);
