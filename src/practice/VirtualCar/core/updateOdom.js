@@ -191,6 +191,7 @@ export const updateOdom = function (updateTimeGap, curSpeed, odom, pathInfo) {
       if (newOdom.horizontal_offset_from_nearest_coordinate > nextCellTeeth) {
         newOdom.current_column += 1;
         newOdom.horizontal_offset_from_nearest_coordinate -= nextCellTeeth;
+        newOdom.offsetPercent = 0; // 这里不准确。
       }else{
         newOdom.offsetPercent = newOdom.horizontal_offset_from_nearest_coordinate / nextCellTeeth
       }
@@ -199,6 +200,7 @@ export const updateOdom = function (updateTimeGap, curSpeed, odom, pathInfo) {
       if (newOdom.horizontal_offset_from_nearest_coordinate > nextCellTeeth) {
         newOdom.current_column -= 1;
         newOdom.horizontal_offset_from_nearest_coordinate -= nextCellTeeth;
+        newOdom.offsetPercent = 0;
       }else{
         newOdom.offsetPercent = newOdom.horizontal_offset_from_nearest_coordinate / nextCellTeeth
       }
@@ -208,7 +210,8 @@ export const updateOdom = function (updateTimeGap, curSpeed, odom, pathInfo) {
       // console.log(nextCellTeeth);
       if (newOdom.vertical_offset_from_nearest_coordinate > nextCellTeeth) {
         newOdom.current_row += 1;
-        newOdom.vertical_offset_from_nearest_coordinate -= nextCellTeeth
+        newOdom.vertical_offset_from_nearest_coordinate -= nextCellTeeth;
+        newOdom.offsetPercent = 0;
       }else{
         newOdom.offsetPercent = newOdom.vertical_offset_from_nearest_coordinate / nextCellTeeth
       }
@@ -216,7 +219,8 @@ export const updateOdom = function (updateTimeGap, curSpeed, odom, pathInfo) {
     case config.SpecificActions['SA_ODOM_DOWN_GROUND_AS_REFERENCE'].toString():
       if (newOdom.vertical_offset_from_nearest_coordinate > nextCellTeeth) {
         newOdom.current_row -= 1;
-        newOdom.vertical_offset_from_nearest_coordinate -= nextCellTeeth
+        newOdom.vertical_offset_from_nearest_coordinate -= nextCellTeeth;
+        newOdom.offsetPercent = 0;
       }else{
         newOdom.offsetPercent = newOdom.vertical_offset_from_nearest_coordinate / nextCellTeeth
       }

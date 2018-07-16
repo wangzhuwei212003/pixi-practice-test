@@ -129,7 +129,7 @@ export const initialDispatch = function () {
         console.info('一步计算用时：', endTime - startTime);
       }
 
-      console.log(shuttles);
+      // console.log(shuttles);
 
     } catch (e) {
       console.error("error in dispatch interval", e);
@@ -216,7 +216,6 @@ export const setReachGoalByUid = function (uid) {
 };
 
 export const setGoal = function (uid, rowInput, colInput, matrixMap = matrixZero) {
-  const LOGGER = shuttles[uid].splitLogger;
   const targetPosition = [rowInput, colInput]; // 电源管理用到。
 
   // 更新目标接口，设置终点。更新 goalTable，算出总齿数以及Action发给小车。
@@ -226,13 +225,13 @@ export const setGoal = function (uid, rowInput, colInput, matrixMap = matrixZero
     return ele === uid;
   });
   if (checkIndex === -1) {
-    if (showDispatchLog) LOGGER.warn('没有找到需要设置终点的uid！');
+    if (showDispatchLog) console.warn('没有找到需要设置终点的uid！');
     return false;
   }
 
   // 2. 传进来的 row、col 需要转换成我这里的坐标系
   if (!shuttles[uid].shuttleConfig.wheel_to_chain) {
-    if (showDispatchLog) LOGGER.warn('没有找到 shuttleConfig.wheel_to_chain ！');
+    if (showDispatchLog) console.warn('没有找到 shuttleConfig.wheel_to_chain ！');
     return false;
   }
 
@@ -250,12 +249,6 @@ export const setGoal = function (uid, rowInput, colInput, matrixMap = matrixZero
   let endRow = endNode[0];
   let endCol = endNode[1];
   let endShift = positionObj.shiftLeft; // 设置货位目标的时候，下沉距离
-  if (showDispatchLog) {
-    // LOGGER.info('shuttle', shuttles[uid]);
-    // LOGGER.info('shuttleConfig.wheel_to_chain', shuttles[uid].shuttleConfig.wheel_to_chain);
-    // LOGGER.info('endShift', endShift);
-    // LOGGER.info('positionObj', positionObj);
-  }
 
   // 3. 排错，判断目标是否合法
   if (endRow === pickStationRow && (endCol === 0 || endCol === lastGoDownPickCol)) {
@@ -266,13 +259,13 @@ export const setGoal = function (uid, rowInput, colInput, matrixMap = matrixZero
   ) {
     //console.log('目标为中间货位'); // 目标是中间货位，这个是 HCPriority 一致的计算方法。
   } else {
-    if (showDispatchLog) LOGGER.warn('目标设置错误。');
+    if (showDispatchLog) console.warn('目标设置错误。');
     return false; // 除了拣货台和中间的货位，其他位置的目标都是不允许的。
   }
 
   // 4. 判断是否有起点了，起点是在goalTable里的。一般是规定好的起点（齿数为0
   if (goalTable[checkIndex][0].length === 0) {
-    if (showDispatchLog) LOGGER.warn('没有位置报告，起点为空！');
+    if (showDispatchLog) console.warn('没有位置报告，起点为空！');
     return false;
   }
 
@@ -282,15 +275,15 @@ export const setGoal = function (uid, rowInput, colInput, matrixMap = matrixZero
   const total_teeth = teethAndActionArr[checkIndex].total_teeth;
   const arrive = reachGoal[checkIndex];
   const distToGoal = Math.abs(total_teeth - total_teeth_from_origin);
-  const curSpeedRPM = shuttles[optUid].curSpeedRPM; // 小车当前速度
+  const curSpeed = shuttles[optUid].curSpeed; // 小车当前速度
 
   if (
       !arrive
   ) {
-    // 这里不用判断小车的速度？只是看arrive这个标识收到 80命令的值？，我觉得还是一起判断比较好。判断条件仅仅是 arrive 是否到达。时间// !arrive || curSpeedRPM !== 0
+    // 这里不用判断小车的速度？只是看arrive这个标识收到 80命令的值？，我觉得还是一起判断比较好。判断条件仅仅是 arrive 是否到达。时间// !arrive || curSpeed !== 0
     // setGoal 之后status是1了。setGoal 这里不用判断 status，本来找空闲小车的方法里就有了 status === 0 的判断。
     // 这里虽然是已经分配了终点，但是，真正的终点不能改变，暂时放在 goalAssignArr 里
-    if (showDispatchLog) LOGGER.info('速度不为0，或到终点距离不为0，调用 setGoal 方法，当前状态', shuttles[optUid].status, ' 当前任务没走完 ', distToGoal, ' 速度不为零', curSpeedRPM);
+    if (showDispatchLog) console.info('速度不为0，或到终点距离不为0，调用 setGoal 方法，当前状态', shuttles[optUid].status, ' 当前任务没走完 ', distToGoal, ' 速度不为零', curSpeed);
     // goalAssignArr[checkIndex] = endNode; // 其他都是和 goalTable 一起改的。这是唯一一个地方 goalAssignArr 改了，goalTable 没改。注意传的是小格子行列数
     return false;
   }
@@ -306,7 +299,7 @@ export const setGoal = function (uid, rowInput, colInput, matrixMap = matrixZero
   let result = calTeethAndPinAction(checkIndex, startNode, endNode, startShift, endShift, goingUp, matrixMap); // goalTable的更新放在这里，goingUpTable也放在这里好了。
 
   // 6. 结果发给小车。 返回{totalLenghth，actions}
-  if (showDispatchLog) LOGGER.info('startNode:', startNode, 'endNode:', endNode, '设置目标后规划出的总齿数和动作：', result);
+  if (showDispatchLog) console.info('startNode:', startNode, 'endNode:', endNode, '设置目标后规划出的总齿数和动作：', result);
   return result;
 };
 
@@ -382,14 +375,12 @@ export const calcGoingupTeeth = function (uid, rowInput, colInput, matrixMap = m
 // 返回拣货台
 export const goToPickUpSite = function (uid, pickSite) {
   // 参数可以是 'SiteA' 'SiteB'
-  const LOGGER = shuttles[uid].splitLogger;
-
   // 1. 找对应 uid 的index
   let checkIndex = uidArr.findIndex((ele) => {
     return ele === uid;
   });
   if (checkIndex === -1) {
-    if (showDispatchLog) LOGGER.warn('没有找到需要设置终点的uid！');
+    if (showDispatchLog) console.warn('没有找到需要设置终点的uid！');
     return;
   }
 
@@ -404,7 +395,7 @@ export const goToPickUpSite = function (uid, pickSite) {
 
   // 3. 得出结果。
   const result = calTeethAndPinAction(checkIndex, startNode, endNode, startShift, endShift, goingUp, matrixZero);
-  if (showDispatchLog) LOGGER.info('uid', uid, '目标为拣货台，规划出的总齿数和动作：', result);
+  if (showDispatchLog) console.info('uid', uid, '目标为拣货台，规划出的总齿数和动作：', result);
   return result;
 };
 
@@ -514,10 +505,10 @@ const calTeethAndPinAction = function (optIndex, startNode, endNode, startShift 
     }
   }, []);
 
-  if (showDispatchLog) {
-    console.info('path', path);
-    console.info('calcPath', calcPath);
-  }
+  // if (showDispatchLog) {
+  //   console.info('path', path);
+  //   console.info('calcPath', calcPath);
+  // }
 
   // let teethAndPinAction = Util.calcTeeth(path, shiftingArr[optIndex]); // 根据 path 算齿数。
   let teethAndPinAction = Util.calcTeeth(calcPath, startShift, endShift, goingUp, wheel); // 根据 path 算齿数。
@@ -610,7 +601,7 @@ const initializePathTable = function () {
     } else {
       // 4. 在路上，根据路径发速度  // 剩下的条件交给规划路径的方法。
 
-      if (showDispatchLog) console.warn('_searchDeepth', _searchDeepth); // 这个是实时规划的，用于避障的path
+      // if (showDispatchLog) console.warn('_searchDeepth', _searchDeepth); // 这个是实时规划的，用于避障的path
 
       const loadBox = optShuttle.loadBox ||
           (
@@ -622,7 +613,7 @@ const initializePathTable = function () {
       const finder = new HCCoopFinder();
       let path = finder.findPath(optIndex, goalTable, _searchDeepth, _pathTable, _matrixZero, rowNum, colNum, false, goingUpTable[optIndex], loadBox, shiftingArr, wheelToChainArr);
 
-      if (showDispatchLog) console.warn('uid', optUid, '根据路径发速度. 实时规划的路径：', path); // 这个是实时规划的，用于避障的path
+      // if (showDispatchLog) console.warn('uid', optUid, '根据路径发速度. 实时规划的路径：', path); // 这个是实时规划的，用于避障的path
 
       if (path.length === 0) {
         // 如果是没有找到路径，是返回的[]，当前的位置也是不合法的，当前的位置被优先级更高的小车占用了。

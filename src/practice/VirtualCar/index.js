@@ -181,11 +181,14 @@ export default class VirtualCar extends Component {
     this.gameLoop();
   }
 
-  findNextGoal(){
+  findNextGoal() {
     console.log('find next goal...')
-
     console.log('流程4 ')
+  }
 
+  testHandleMsg(){
+    console.log('handle msg');
+    this.state.car.handleCmdMsg('80');
   }
 
   render() {
@@ -220,12 +223,18 @@ export default class VirtualCar extends Component {
           <p>首先 initial dispatch，再添加一辆车。</p>
           <Button type='primary' onClick={this.registerOneMore.bind(this)}>流程1：注册一辆小车（后端注册一辆小车） </Button>
           <br/>
-          <Button type='primary' onClick={this.sendTestPathInfo.bind(this)}>流程2：注册上来后，起始位置在原点，直接去顶部停靠点（更新小车的 pathinfo ） </Button>
+          <Button type='primary' onClick={this.sendTestPathInfo.bind(this)}>流程2：注册上来后，起始位置在原点，直接去顶部停靠点（更新小车的 pathinfo
+            ） </Button>
           <br/>
           <Button type='primary' onClick={this.gameLoop.bind(this)}>流程2-1：开始运动 </Button>
           <br/>
           <Button type='primary' onClick={this.findNextGoal.bind(this)}>流程4：到达之后，找一个随机目标点，生成下一段 pathinfo </Button>
+          <br/>
+          <br/>
+          <Button type='primary' onClick={this.testHandleMsg.bind(this)}> test HandleMsg </Button>
 
+          <br/>
+          <br/>
         </div>
     );
   }

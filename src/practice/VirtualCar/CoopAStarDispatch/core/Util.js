@@ -736,7 +736,7 @@ export const sendVelocity = async function (path, shuttle, shift, endNodeArr, od
   let distToStop_obj = calcTeeth(path.slice(0, ToZeroIndex), shift, 0, goingUp, shuttle.shuttleConfig.wheel); // 改为0，因为 calcTeeth里已经去头了。shift标识当前位置的偏移。
   distToStop = distToStop_obj.total_teeth - shift; // 这个 shift 是当前位置的偏移量。这个是正的。
   if (distToStop < 0) {
-    if (showDispatchLog) console.warn('需要停止的距离是负数', distToStop, '设为零');
+    // if (showDispatchLog) console.warn('需要停止的距离是负数', distToStop, '设为零');
     distToStop = 0;
   }
   // 以上，算出需要停止的距离，和 刹车所需要的距离 比较。此时不用考虑伸pin、缩pin
@@ -817,6 +817,7 @@ export const sendVelocity = async function (path, shuttle, shift, endNodeArr, od
             action.specific_action === 'SA_TURNING_BEGIN_POINT'
         )) {
       // 2-1. 下一个动作是伸pin，或者是开始转弯
+      console.log('action', action);
       distToPS = Math.abs(action.target_teeth - total_teeth_from_origin); // 还剩多少距离需要伸pin 或转弯。确保是正数
       if (showDispatchLog) console.info('伸pin前或者开始转弯前需要减速，target_teeth:', action.target_teeth, '还剩多少距离，distToPS：', distToPS, '减速到过活门速度的刹车距离,PSDist:', PSDist);
       if (distToPS <= PSDist) {
@@ -875,11 +876,11 @@ export const sendVelocity = async function (path, shuttle, shift, endNodeArr, od
     }
     /* %%%%%%%%%%%% 没有障碍，等同单车，情况分类结束 %%%%%%%%%%%%*/
   }
-  if (showDispatchLog) {
-    console.info('已走过的齿数：', total_teeth_from_origin, '当前速度（齿每秒）：', currentSpeed, '当前速度（currentSpeed）：', currentSpeed);
-    console.info('actions', teethAndAction);
-    console.warn('(避障)还剩多少需要停止：', distToStop, '还剩多少需要伸pin：', distToPS, '刹车距离：', ToZeroDist, '刹到活门速度距离', PSDist);
-  }
+  // if (showDispatchLog) {
+  //   console.info('已走过的齿数：', total_teeth_from_origin, '当前速度（齿每秒）：', currentSpeed, '当前速度（currentSpeed）：', currentSpeed);
+  //   console.info('actions', teethAndAction);
+  //   console.warn('(避障)还剩多少需要停止：', distToStop, '还剩多少需要伸pin：', distToPS, '刹车距离：', ToZeroDist, '刹到活门速度距离', PSDist);
+  // }
 
 };
 

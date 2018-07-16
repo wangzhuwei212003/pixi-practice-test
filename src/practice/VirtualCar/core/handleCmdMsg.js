@@ -37,12 +37,12 @@ export const handleCmdMsgSwitch = function (msg) {
 
       this.status = 3; // 小车状态变为 3
       this.loadBox = true;
-      // const pathInfo = dispatch.goToPickUpSite(this.uid, this.cache.pickSiteName);
+      const pathInfo = dispatch.goToPickUpSite(this.uid, this.cache.pickSiteName);
 
       // 给机器人发送返回拣货站命令动作信息 收到72只有是去拣货台的。
-      // this.sendTargetActionToShuttle(pathInfo); // 这里this就是标识了 car 整个function了？可以调用car里面的方法。
-      this.consoleTest(command_ID);
-      this.consoleTest();
+      this.sendTargetActionToShuttle(pathInfo); // 这里this就是标识了 car 整个function了？可以调用car里面的方法。
+      // this.consoleTest(command_ID);
+      // this.consoleTest();
       break;
     }
 
@@ -72,6 +72,7 @@ export const handleCmdMsgSwitch = function (msg) {
 
         setTimeout(() => {
           this.handleCmdMsg('72');
+          this.alreadySendFlag = false;
         }, 3000); // 3秒之后拉箱子完成。
 
       } else if (this.status === 3) {
@@ -81,6 +82,11 @@ export const handleCmdMsgSwitch = function (msg) {
         setTimeout(() => {
           // TODO 小车从拣货台去还箱子。
           console.log('小车从拣货台去还箱子');
+          const pathInfo = dispatch.setGoal(this.uid, 2,2);
+
+          // 给机器人发送返回拣货站命令动作信息 收到72只有是去拣货台的。
+          this.sendTargetActionToShuttle(pathInfo); // 这里this就是标识了 car 整个function了？可以调用car里面的方法。
+          this.alreadySendFlag = false;
         }, 3000); // 3秒之后拣货完成，小车去还箱子。
 
       } else if (this.status === 5) {
@@ -89,14 +95,29 @@ export const handleCmdMsgSwitch = function (msg) {
 
         setTimeout(() => {
           this.handleCmdMsg('73');
+          this.alreadySendFlag = false;
         }, 3000); // 3秒之后还箱子完成。
+
+      } else if (this.status === 0){
+        // 小车是空闲的状态，走完了一段路程，那么，小车可能是一开始上去顶部停靠点，也可能是挡路被挤走，这个时候，应该是寻找下一个货位。setGoal。
+
+        setTimeout(() => {
+          const pathInfo = dispatch.setGoal(this.uid, 2,2);
+          // console.log('小车现有的 odom', this.odom);
+          // console.log('setGoal(this.uid, 2,2)', pathInfo);
+          // 给机器人发送返回拣货站命令动作信息 收到72只有是去拣货台的。
+          this.sendTargetActionToShuttle(pathInfo); // 这里this就是标识了 car 整个function了？可以调用car里面的方法。
+          this.status = 1;
+
+          this.alreadySendFlag = false; // 能够接收下一个命令了。
+        }, 2000); // 两秒之后，开始去拣货的位置。
 
       }
       break;
     }
 
     default:
-      console.log('收到 80 命令，this.status:', this.status);
+      console.log('没有考虑到的情况：收到 80 命令，this.status:', this.status);
   }
 
 };

@@ -43,18 +43,24 @@ function car(uid) {
   };
   this.registered = false;
 
+  this.alreadySendFlag = false; // 这个用来保证同一个 case 同样的命令只发一次。
+
   this.updateOdomInterval = setInterval(() => {
     try {
       if (this.registered) {
         // 如果是已经注册了的，就开始向后端 dispatch 不停的发位置报告。
         dispatch.setStartNode(this.uid, this.odom);
-        this.updateOdomByTime(50); // 这边更新 odom 的时间间隔也是 50毫秒。
+        this.updateOdomByTime(20); // 这边更新 odom 的时间间隔也是 50毫秒。
+
+        this.splitLogger.log(this.odom);
+        this.splitLogger.log(this.pathInfo);
+
         this.updateVelocity(50); // 改变速度。
       }
     } catch (e) {
-      console.error("error in updateOdomInterval to dispatch", e);
+      this.splitLogger.error("error in updateOdomInterval to dispatch", e);
     }
-  }, 50); // 每 50 毫秒向 dispatch 文件避障服务器发送一次odom数据
+  }, 100); // 每 50 毫秒向 dispatch 文件避障服务器发送一次odom数据
 
   this.handleCmdMsg.bind(this);
   this.updateOdomByTime.bind(this);
@@ -63,13 +69,13 @@ function car(uid) {
 
 car.prototype._initialOdom = function () {
   // 初始化car里的odom
-  console.log('initial Odom');
+  this.splitLogger.log('initial Odom');
   return JSON.parse(JSON.stringify(config.Odometry)); // 返回config里的初始的原点处的 odom
   // return config.Odometry; // 返回config里的初始的原点处的 odom
 };
 car.prototype._initialPathInfo = function () {
   // 初始化car里的odom
-  console.log('initial PathInfo');
+  this.splitLogger.log('initial PathInfo');
   return JSON.parse(JSON.stringify(config.pathInfoInit)); // 返回config里的初始的原点处的 odom
   // return config.pathInfo; // 返回config里的初始的原点处的 odom
 };
@@ -82,20 +88,20 @@ car.prototype.updateOdomTest = function (updateTimeGap) {
 
 car.prototype.consoleTest = function (hello = 'hello') {
   // 测试，
-  console.log(hello);
+  this.splitLogger.log(hello);
 };
 
 // 处理 command ID
 car.prototype.handleCmdMsg = function (msg) {
-  console.log('小车收到命令', msg);
-  // console.log(this);
+  this.splitLogger.log('小车收到命令', msg);
+  // this.splitLogger.log(this);
   handleCmdMsgSwitch.bind(this)(msg);
 };
 
 car.prototype.updateVelocity = function (timeGap) {
-  if(this.curSpeed > this.cache.targetVelocity){
+  if (this.curSpeed > this.cache.targetVelocity) {
     this.curSpeed -= this.shuttleConfig.deceleration * timeGap / 1000;
-  }else if (this.curSpeed < this.cache.targetVelocity){
+  } else if (this.curSpeed < this.cache.targetVelocity) {
     this.curSpeed += this.shuttleConfig.acceleration * timeGap / 1000;
   }
 };
@@ -106,41 +112,45 @@ car.prototype.updateOdomByTime = function (updateTimeGap) {
 
   if (this.odom.total_teeth_from_origin >= this.pathInfo.total_teeth) {
     // 如果是小车已经走到了，就不再往前走。
-    console.log('小车到达目前路径的终点');
+    // this.splitLogger.log('小车到达目前路径的终点');
     this.curSpeed = 0; // 强行把小车速度降为0.
 
-    this.handleCmdMsg('80'); // 小车到达目前路径，发送 80 command ID
+    if (!this.alreadySendFlag) {
+      // this.handleCmdMsg('80'); // 小车到达目前路径，发送 80 command ID 这个加上会很奇怪的事情。
+      this.alreadySendFlag = true; // 发过一次命令之后，就不再发。
+    }
 
     // 注意，开始下一段路径之前，teeth from origin 是要归零的。
 
     return
   } else {
     // 改变car里面的odom
-    // console.log('Update Odom');
+    // this.splitLogger.log('Update Odom');
     this.odom = updateOdom(updateTimeGap, this.curSpeed, this.odom, this.pathInfo);
     return
   }
-};
+}
+;
 
 car.prototype.getOdom = function (updateTimeGap) {
-  console.log('get Odom');
+  this.splitLogger.log('get Odom');
   return this.odom;
 };
 
 car.prototype.handleVelocityReceived = function () {
 // 接收到 velocity，后续的动作
-  console.log('handle Velocity Received');
+  this.splitLogger.log('handle Velocity Received');
 
 };
 
 car.prototype.handlePathInfoReceived = function (newPathInfo) {
-  console.log('handle PathInfo Received');
+  this.splitLogger.log('handle PathInfo Received');
   // 如果上一个路径还没有走完，就不能开始下一个路径。报错。
   // 注意，total_teeth_from_origin 并不是从原点开始走了多少个齿，而是，从一段路径的起点开始。
   // 一段路径走完之后，要有 total_teeth_from_origin 归零。
   if (this.odom.total_teeth_from_origin < Math.abs(this.pathInfo.total_teeth)) {
     // 如果是小车还没走到之前的路径，就不接收新的路径。
-    console.log('小车还没走到之前的路径，就不接收新的路径');
+    // this.splitLogger.log('小车还没走到之前的路径，就不接收新的路径');
     return
   } else {
     /*
@@ -157,20 +167,20 @@ car.prototype.handlePathInfoReceived = function (newPathInfo) {
       this.odom = switchOdomUpToDown(this.odom);
     }
 
-    console.log('Update pathinfo');
+    this.splitLogger.log('Update pathinfo');
     this.pathInfo = newPathInfo;
     return
   }
 };
 
 car.prototype.sendTargetActionToShuttle = function (newPathInfo) {
-  console.log('handle PathInfo Received');
+  this.splitLogger.log('handle PathInfo Received');
   // 如果上一个路径还没有走完，就不能开始下一个路径。报错。
   // 注意，total_teeth_from_origin 并不是从原点开始走了多少个齿，而是，从一段路径的起点开始。
   // 一段路径走完之后，要有 total_teeth_from_origin 归零。
   if (this.odom.total_teeth_from_origin < Math.abs(this.pathInfo.total_teeth)) {
     // 如果是小车还没走到之前的路径，就不接收新的路径。
-    console.log('小车还没走到之前的路径，就不接收新的路径');
+    this.splitLogger.log('小车还没走到之前的路径，就不接收新的路径');
     return
   } else {
     /*
@@ -187,8 +197,9 @@ car.prototype.sendTargetActionToShuttle = function (newPathInfo) {
       this.odom = switchOdomUpToDown(this.odom);
     }
 
-    console.log('Update pathinfo');
+    this.splitLogger.log('Update pathinfo');
     this.pathInfo = newPathInfo;
+    this.odom.total_teeth_from_origin = 0; // 开始一段新的路径前，这个值重置为 0
     return
   }
 };
@@ -199,13 +210,13 @@ car.prototype.sendSpeedToShuttle = function (receivedVelocity) {
 
   if (this.odom.total_teeth_from_origin >= Math.abs(this.pathInfo.total_teeth)) {
     // 如果是小车还没走到之前的路径，就不接收新的路径。
-    console.log('小车走完之前的路径，就不接收新的速度');
+    // this.splitLogger.log('小车走完之前的路径，就不接收新的速度');
     this.cache.targetVelocity = 0;
     return
   } else {
     // 还没有到终点，能够调速度。
     this.cache.targetVelocity = receivedVelocity;
-    console.log('Update this.cache.targetVelocity');
+    // this.splitLogger.log('Update this.cache.targetVelocity');
     return
   }
 };
