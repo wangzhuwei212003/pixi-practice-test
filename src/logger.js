@@ -1,14 +1,40 @@
 import winston from 'winston';
 import moment from 'moment-timezone';
-import fs from "fs";
+// import fs from "fs";
+import * as fs from 'fs-web';
 import path from 'path';
 process.env.TZ = 'Asia/Shanghai';
 
+/*const fs = require('fs');
+console.log(fs);
+console.log(JSON.stringify(fs)); // 前端浏览器没有 nodeJS 里的 fs 包。这里的 fs 就是一个空的 object */
+
 const logsDir = path.join(process.cwd(), './logs/');
 
-if (!fs.existsSync(logsDir)) {
-  fs.mkdirSync(logsDir);
+console.log(logsDir);
+
+console.log(fs);
+console.log(JSON.stringify(fs));
+
+console.log(fs.readdir(logsDir));
+console.log(fs.readdir(logsDir));
+
+fs.readdir(logsDir)
+    .then(res => {
+      if(res.length === 0){
+        fs.mkdir(logsDir);
+      }
+      console.log(res)
+    })
+    .catch(err => console.log(err));
+
+if(!fs.readdir(logsDir)){
+  console.log('path not exist...')
 }
+
+/*if (!fs.existsSync(logsDir)) {
+  fs.mkdirSync(logsDir);
+}*/
 
 const timestampFormat = function() {
   return moment.tz('Asia/Shanghai').format('YYYY-MM-DD HH:mm:ss:SSS');

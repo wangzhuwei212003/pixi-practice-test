@@ -3,6 +3,10 @@
  */
 //var Node = require('./Node');
 // import Node from './Node';
+
+import winston from 'winston';
+import { logger, shuttleLogFile } from '../../../logger';
+
 import config from '../config';
 import {
   updateOdom,
@@ -15,6 +19,15 @@ import {
 import * as dispatch from '../CoopAStarDispatch/dispatch.js';
 
 function car(uid) {
+
+  winston.loggers.add(uid, {
+    transports: [
+      //wConsole,
+      shuttleLogFile(uid),
+    ]
+  });
+
+  this.splitLogger = process.env.NODE_ENV === 'test' ? logger : winston.loggers.get(uid);
 
   // 初始化小车，初始化 shuttle config。这个都是不会变的。
   this.shuttleConfig = {
